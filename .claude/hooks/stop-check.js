@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Stop hook: session-end verification. Warns (does not block) if obvious
 // secrets are staged for commit. Exit 0 always — advisory only.
 const { execFileSync } = require("node:child_process");
