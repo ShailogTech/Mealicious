@@ -178,7 +178,7 @@ function FilterSidebar({
               <Checkbox
                 checked={selectedCategories.includes(cat.slug)}
                 onCheckedChange={() => onToggleCategory(cat.slug)}
-                className="data-[state=checked]:bg-orange-400 data-[state=checked]:border-orange-400"
+                className="data-[state=checked]:bg-[#10b981] data-[state=checked]:border-[#10b981]"
               />
               <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors flex-1">
                 {cat.name}
@@ -203,7 +203,7 @@ function FilterSidebar({
             step={50}
             value={priceRange}
             onValueChange={(val) => onSetPriceRange(val as [number, number])}
-            className="mb-4 [&_[data-slot=slider-range]]:bg-orange-400 [&_[data-slot=slider-thumb]]:border-orange-400"
+            className="mb-4 [&_[data-slot=slider-range]]:bg-[#10b981] [&_[data-slot=slider-thumb]]:border-[#10b981]"
           />
           <div className="flex items-center gap-3">
             <div className="flex-1">
@@ -252,7 +252,7 @@ function FilterSidebar({
               onClick={() => onSetMinRating(minRating === rating ? 0 : rating)}
               className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm transition-colors ${
                 minRating === rating
-                  ? 'bg-blue-50 text-orange-400 font-medium'
+                  ? 'bg-green-50 text-green-700 font-medium'
                   : 'hover:bg-muted text-muted-foreground'
               }`}
             >
@@ -262,7 +262,7 @@ function FilterSidebar({
                     key={i}
                     className={`h-3.5 w-3.5 ${
                       i < rating
-                        ? 'fill-orange-400 text-orange-400'
+                        ? 'fill-amber-400 text-amber-400'
                         : 'fill-muted text-muted'
                     }`}
                   />
@@ -286,8 +286,8 @@ function FilterSidebar({
               onClick={() => onToggleTag(tag)}
               className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors border ${
                 selectedTags.includes(tag)
-                  ? 'bg-orange-400 text-white border-orange-400'
-                  : 'bg-background text-muted-foreground border-border hover:border-blue-300 hover:text-orange-400'
+                  ? 'bg-stone-900 text-white border-stone-900'
+                  : 'bg-background text-muted-foreground border-border hover:border-stone-400 hover:text-stone-900'
               }`}
             >
               {tag}
@@ -356,7 +356,7 @@ function ListProductCard({ product }: { product: Product }) {
           </Badge>
         )}
         {product.isNew && (
-          <Badge className="absolute top-2 right-2 bg-orange-400 text-white hover:bg-orange-400 border-0 text-[11px] font-semibold px-1.5 py-0.5">
+          <Badge className="absolute top-2 right-2 bg-[#10b981] text-white hover:bg-[#059669] border-0 text-[11px] font-semibold px-1.5 py-0.5">
             NEW
           </Badge>
         )}
@@ -401,7 +401,7 @@ function ListProductCard({ product }: { product: Product }) {
                 key={star}
                 className={`h-3 w-3 ${
                   star <= Math.round(product.rating)
-                    ? 'fill-orange-400 text-orange-400'
+                    ? 'fill-amber-400 text-amber-400'
                     : 'fill-muted text-muted'
                 }`}
               />
@@ -417,7 +417,7 @@ function ListProductCard({ product }: { product: Product }) {
           {product.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-orange-400 border border-blue-100"
+              className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-[#10b981] border border-blue-100"
             >
               {tag}
             </span>
@@ -427,13 +427,13 @@ function ListProductCard({ product }: { product: Product }) {
         {/* Price and Action */}
         <div className="flex items-center justify-between mt-auto pt-3">
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-bold text-orange-400">₹{displayPrice}</span>
+            <span className="text-lg font-bold text-[#10b981]">₹{displayPrice}</span>
             {product.salePrice && (
               <span className="text-sm text-muted-foreground line-through">₹{product.price}</span>
             )}
           </div>
           <Button
-            className="bg-orange-400 hover:bg-orange-400 text-white text-xs sm:text-sm h-8 sm:h-9"
+            className="bg-stone-900 hover:bg-stone-850 text-white text-xs sm:text-sm h-8 sm:h-9"
             onClick={(e) => {
               e.stopPropagation()
               const firstVariant = product.variants[0]
@@ -700,7 +700,7 @@ export default function ShopPage() {
           <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
             <button
               onClick={() => navigate('home')}
-              className="hover:text-orange-400 transition-colors"
+              className="hover:text-[#10b981] transition-colors"
             >
               Home
             </button>
@@ -719,7 +719,7 @@ export default function ShopPage() {
                 {searchQuery && (
                   <span>
                     {' '}
-                    for &ldquo;<span className="text-orange-400 font-medium">{searchQuery}</span>&rdquo;
+                    for &ldquo;<span className="text-[#10b981] font-medium">{searchQuery}</span>&rdquo;
                   </span>
                 )}
               </p>
@@ -741,7 +741,7 @@ export default function ShopPage() {
                 <SlidersHorizontal className="h-4 w-4" />
                 Filters
                 {activeFilterCount > 0 && (
-                  <Badge className="bg-orange-400 text-white border-0 h-5 w-5 p-0 text-[10px] flex items-center justify-center rounded-full">
+                  <Badge className="bg-[#10b981] text-white border-0 h-5 w-5 p-0 text-[10px] flex items-center justify-center rounded-full">
                     {activeFilterCount}
                   </Badge>
                 )}
@@ -750,7 +750,7 @@ export default function ShopPage() {
             <SheetContent side="left" className="w-80">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-orange-400" />
+                  <Filter className="h-4 w-4 text-[#10b981]" />
                   Filters
                 </SheetTitle>
               </SheetHeader>
@@ -789,7 +789,7 @@ export default function ShopPage() {
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="icon"
               className={`h-8 w-8 rounded-none ${
-                viewMode === 'grid' ? 'bg-orange-400 hover:bg-orange-400' : ''
+                viewMode === 'grid' ? 'bg-stone-900 hover:bg-stone-850' : ''
               }`}
               onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'grid' })}
               aria-label="Grid view"
@@ -800,7 +800,7 @@ export default function ShopPage() {
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size="icon"
               className={`h-8 w-8 rounded-none ${
-                viewMode === 'list' ? 'bg-orange-400 hover:bg-orange-400' : ''
+                viewMode === 'list' ? 'bg-stone-900 hover:bg-stone-850' : ''
               }`}
               onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'list' })}
               aria-label="List view"
@@ -818,7 +818,7 @@ export default function ShopPage() {
               <Badge
                 key={tag.key}
                 variant="secondary"
-                className="gap-1 pr-1 text-xs font-medium bg-blue-50 text-orange-400 border-blue-200 hover:bg-blue-100"
+                className="gap-1 pr-1 text-xs font-medium bg-blue-50 text-[#10b981] border-blue-200 hover:bg-blue-100"
               >
                 {tag.label}
                 <button
@@ -845,10 +845,10 @@ export default function ShopPage() {
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-24">
               <div className="flex items-center gap-2 mb-4">
-                <Filter className="h-4 w-4 text-orange-400" />
+                <Filter className="h-4 w-4 text-[#10b981]" />
                 <h2 className="font-semibold text-foreground">Filters</h2>
                 {activeFilterCount > 0 && (
-                  <Badge className="bg-orange-400 text-white border-0 h-5 min-w-5 px-1.5 text-[10px] flex items-center justify-center rounded-full">
+                  <Badge className="bg-[#10b981] text-white border-0 h-5 min-w-5 px-1.5 text-[10px] flex items-center justify-center rounded-full">
                     {activeFilterCount}
                   </Badge>
                 )}
@@ -864,7 +864,7 @@ export default function ShopPage() {
             {paginatedProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 sm:py-24 text-center">
                 <div className="h-20 w-20 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                  <PackageSearch className="h-10 w-10 text-orange-400" />
+                  <PackageSearch className="h-10 w-10 text-[#10b981]" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">
                   No products found
@@ -875,7 +875,7 @@ export default function ShopPage() {
                 </p>
                 <Button
                   onClick={clearAllFilters}
-                  className="bg-orange-400 hover:bg-orange-400 text-white"
+                  className="bg-stone-900 hover:bg-stone-850 text-white"
                 >
                   Clear All Filters
                 </Button>
@@ -926,7 +926,7 @@ export default function ShopPage() {
                           onClick={() => dispatch({ type: 'SET_PAGE', payload: item })}
                           className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
                             safePage === item
-                              ? 'bg-orange-400 text-white hover:bg-orange-400'
+                              ? 'bg-[#10b981] text-white hover:bg-[#059669]'
                               : 'hover:bg-accent hover:text-accent-foreground'
                           }`}
                           aria-current={safePage === item ? 'page' : undefined}
@@ -956,3 +956,4 @@ export default function ShopPage() {
     </div>
   )
 }
+

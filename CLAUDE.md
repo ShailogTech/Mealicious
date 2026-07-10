@@ -11,7 +11,7 @@ Mealicious Store — a single-page Next.js 16 / React 19 storefront for a premiu
 Runtime is **Bun**, not Node. Use Bun for installs and scripts.
 
 - `bun install` — install deps
-- `bun run dev` — Next dev server on port 3000 (output tee'd to `dev.log`)
+- `bun run dev` — Next dev server on port 3005 (output tee'd to `dev.log`)
 - `bun run build` — `next build` then copies `.next/static` and `public` into `.next/standalone/` (required because `next.config.ts` sets `output: "standalone"`)
 - `bun run start` — runs the standalone server in production (`NODE_ENV=production bun .next/standalone/server.js`)
 - `bun run lint` — ESLint (flat config in `eslint.config.mjs`)
@@ -46,7 +46,7 @@ shadcn/ui components live in `src/components/ui/` (do not edit casually — they
 - `dev.sh` runs `bun install`, `bun run db:push`, starts dev server, then iterates `mini-services/*` (each with its own `package.json` + `dev` script) and starts them in background.
 - `build.sh` builds Next + each mini-service, packages everything plus `Caddyfile` and the SQLite DB into `/tmp/build_fullstack_$BUILD_ID.tar.gz`.
 - `start.sh` is the production entrypoint inside that tarball — boots Next standalone, then mini-services, then `caddy run` as PID 1.
-- `Caddyfile` listens on `:81` and reverse-proxies to `localhost:3000` by default, or to a port specified via the `XTransformPort` query param.
+- `Caddyfile` listens on `:81` and reverse-proxies to `localhost:3005` by default, or to a port specified via the `XTransformPort` query param.
 
 The `mini-services/` directory is currently empty in this checkout but the tooling expects it; add sub-services as directories with their own `package.json` and `dev`/`build`/`start` scripts.
 

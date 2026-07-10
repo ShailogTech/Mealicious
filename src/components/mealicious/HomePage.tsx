@@ -16,6 +16,10 @@ import {
   Nut,
   Grape,
   Soup,
+  ShoppingCart,
+  Minus,
+  Plus,
+  Trash2,
 } from 'lucide-react'
 import { CategoryIcon } from '@/lib/category-icons'
 import { Card, CardContent } from '@/components/ui/card'
@@ -26,6 +30,10 @@ import { useAppStore } from '@/lib/store'
 import { useCatalogStore } from '@/lib/catalog-store'
 import { testimonials } from '@/lib/data'
 import ProductCard from '@/components/mealicious/ProductCard'
+import NeuHero from '@/components/mealicious/NeuHero'
+import { Carousel as AppleCardsCarousel, Card as AppleCard } from '@/components/ui/apple-cards-carousel'
+import { StaggerTestimonials } from '@/components/ui/stagger-testimonials'
+import BounceCards from '@/components/ui/bounce-cards'
 
 /* ─────────────────────── animation helpers ─────────────────────── */
 
@@ -127,6 +135,160 @@ const whyChooseItems = [
   },
 ]
 
+/* ─────────────────────── ProductAppleCardContent ─────────────────────── */
+
+const ProductAppleCardContent = ({ product }: { product: any }) => {
+  const addToCart = useAppStore((s) => s.addToCart)
+  const cartItems = useAppStore((s) => s.cartItems)
+  const removeFromCart = useAppStore((s) => s.removeFromCart)
+  const updateQuantity = useAppStore((s) => s.updateQuantity)
+  
+  const activePricing = (() => {
+    const firstVariant = product.variants?.[0]
+    if (firstVariant && firstVariant.options?.[0] && typeof firstVariant.options[0] === 'object') {
+      const opt = firstVariant.options[0] as any
+      return {
+        price: opt.price ?? product.price,
+        salePrice: opt.salePrice !== undefined ? opt.salePrice : product.salePrice,
+        variantVal: opt.value
+      }
+    }
+    return {
+      price: product.price,
+      salePrice: product.salePrice,
+      variantVal: firstVariant?.options?.[0]
+    }
+  })()
+
+  const cartItem = cartItems.find(
+    (ci) => ci.productId === product.id && (ci.variant || 'default') === (activePricing.variantVal || 'default')
+  )
+
+  const displayPrice = activePricing.salePrice ?? activePricing.price
+
+  return (
+    <div className="bg-[#F5F5F7] dark:bg-neutral-800 p-6 md:p-10 rounded-3xl mb-4 flex flex-col md:flex-row gap-6 md:gap-8 items-center text-left">
+      <div className="w-full md:w-1/2 space-y-4">
+        <Badge variant="secondary" className="text-xs">
+          {product.category}
+        </Badge>
+        <h3 className="text-2xl md:text-3xl font-bold text-stone-900 dark:text-stone-100 font-serif leading-tight">
+          {product.name}
+        </h3>
+        
+        {/* Rating */}
+        <div className="flex items-center gap-1">
+          <div className="flex items-center">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star
+                key={star}
+                className={`h-4 w-4 ${
+                  star <= Math.round(product.rating)
+                    ? 'fill-orange-400 text-orange-400'
+                    : 'fill-muted text-muted'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-sm font-semibold text-stone-900 dark:text-stone-100">
+            {product.rating}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            ({product.reviewCount} reviews)
+          </span>
+        </div>
+
+        <p className="text-stone-600 dark:text-stone-300 text-xs sm:text-sm md:text-base leading-relaxed">
+          {product.description || product.shortDesc}
+        </p>
+
+        <div className="flex items-baseline gap-3">
+          <span className="text-2xl sm:text-3xl font-extrabold text-orange-400">
+            ₹{displayPrice}
+          </span>
+          {product.salePrice && (
+            <span className="text-sm sm:text-base text-muted-foreground line-through">
+              ₹{product.price}
+            </span>
+          )}
+        </div>
+
+        {cartItem ? (
+          <div className="flex items-center gap-2 h-11 bg-white border border-stone-200 rounded-xl px-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 border-stone-200 text-stone-600 hover:bg-stone-50"
+              onClick={() => {
+                const newQty = cartItem.quantity - 1
+                if (newQty <= 0) {
+                  removeFromCart(product.id, activePricing.variantVal)
+                } else {
+                  updateQuantity(product.id, newQty, activePricing.variantVal)
+                }
+              }}
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </Button>
+            <div className="flex-1 sm:flex-initial sm:px-4 flex items-center justify-center text-xs sm:text-sm font-bold text-stone-900">
+              {cartItem.quantity} in Cart
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 border-stone-200 text-stone-600 hover:bg-stone-50"
+              onClick={() => {
+                updateQuantity(product.id, cartItem.quantity + 1, activePricing.variantVal)
+              }}
+              disabled={cartItem.quantity >= product.stock}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-red-500 hover:text-red-650 hover:bg-red-50"
+              onClick={() => removeFromCart(product.id, activePricing.variantVal)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <Button
+            className="bg-orange-400 hover:bg-orange-400 text-white font-bold h-11 rounded-xl w-full sm:w-auto px-8"
+            onClick={() => {
+              const firstVariant = product.variants?.[0]
+              addToCart({
+                productId: product.id,
+                name: product.name,
+                image: product.images[0],
+                price: activePricing.price,
+                salePrice: activePricing.salePrice,
+                quantity: 1,
+                variant: activePricing.variantVal,
+                variantType: firstVariant?.type,
+                maxStock: product.stock,
+              })
+            }}
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Add to Cart
+          </Button>
+        )}
+      </div>
+
+      <div className="w-full md:w-1/2 flex items-center justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={product.images?.[0] || '/images/products/cashews-premium.png'}
+          alt={product.name}
+          className="max-w-[240px] sm:max-w-[280px] object-contain transition-transform hover:scale-105 duration-300"
+        />
+      </div>
+    </div>
+  )
+}
+
 /* ═══════════════════════ HOME PAGE ═══════════════════════ */
 
 export default function HomePage() {
@@ -135,7 +297,9 @@ export default function HomePage() {
   const categories = useCatalogStore((s) => s.categories)
   const featuredProducts = products.filter((p) => p.featured)
   const bestSellers = products.filter((p) => p.bestSeller)
-  const newArrivals = products.filter((p) => p.isNew)
+  const newArrivalsList = products.filter((p) => p.isNew)
+  const remaining = products.filter((p) => !p.isNew)
+  const newArrivals = [...newArrivalsList, ...remaining].slice(0, 16)
 
   interface PublicBanner {
     id: string
@@ -244,9 +408,29 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col">
-      {/* ──────── 1. Hero Section ──────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-stone-900 via-stone-950 to-stone-900 border-b border-white/5">
+    <div className="min-h-screen w-full bg-background relative text-gray-800 flex flex-col">
+      {/* Zigzag Lightning - Light Pattern (disabled to match Farmley clean white background)
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(75, 85, 99, 0.08) 20px, rgba(75, 85, 99, 0.08) 21px),
+            repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(107, 114, 128, 0.06) 30px, rgba(107, 114, 128, 0.06) 31px),
+            repeating-linear-gradient(60deg, transparent, transparent 40px, rgba(55, 65, 81, 0.05) 40px, rgba(55, 65, 81, 0.05) 41px),
+            repeating-linear-gradient(150deg, transparent, transparent 35px, rgba(31, 41, 55, 0.04) 35px, rgba(31, 41, 55, 0.04) 36px)
+          `,
+        }}
+      />
+      */}
+      {/* ──────── 1. Hero Section — Neu Hero ──────── */}
+      <NeuHero
+        title={heroTitle}
+        subtitle={heroSubtitle}
+        onShop={handleBannerClick}
+      />
+
+      {/* ──────── 1b. (legacy hero kept hidden for reference) ──────── */}
+      <section className="hidden relative overflow-hidden bg-gradient-to-br from-stone-900 via-stone-950 to-stone-900 border-b border-white/5">
         {/* Glow ambient blurs */}
         <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-amber-500/10 blur-[100px]" />
         <div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-orange-600/10 blur-[100px]" />
@@ -414,10 +598,10 @@ export default function HomePage() {
       </section>
 
       {/* ──────── 2. Category Section ──────── */}
-      <section className="py-14 sm:py-20 bg-background">
+      <section className="pt-8 pb-4 sm:pt-14 sm:pb-6 bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeInWhenVisible>
-            <div className="text-center mb-10">
+            <div className="text-center mb-6">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif">
                 Shop by Category
               </h2>
@@ -463,10 +647,10 @@ export default function HomePage() {
       </section>
 
       {/* ──────── 3. Featured Products Section ──────── */}
-      <section className="py-14 sm:py-20 bg-muted/30">
+      <section className="py-4 sm:py-6 bg-muted/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeInWhenVisible>
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif">
                   Featured Products
@@ -485,22 +669,35 @@ export default function HomePage() {
               </Button>
             </div>
           </FadeInWhenVisible>
-
-          <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {featuredProducts.map((product) => (
-              <motion.div key={product.id} variants={staggerChild}>
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
-          </StaggerContainer>
+ 
+          <FadeInWhenVisible>
+            <div className="relative overflow-visible w-full pt-4">
+              <AppleCardsCarousel
+                items={featuredProducts.map((product, index) => (
+                  <AppleCard
+                    key={product.id}
+                    card={{
+                      category: product.category,
+                      title: product.name,
+                      src: product.images?.[0] || '/images/products/cashews-premium.png',
+                      content: <ProductAppleCardContent product={product} />,
+                    }}
+                    index={index}
+                    layout={true}
+                    layoutIdPrefix="featured-"
+                  />
+                ))}
+              />
+            </div>
+          </FadeInWhenVisible>
         </div>
       </section>
-
+ 
       {/* ──────── 4. Best Sellers Section ──────── */}
-      <section className="py-14 sm:py-20 bg-background">
+      <section className="py-4 sm:py-6 bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeInWhenVisible>
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif">
                   Best Sellers
@@ -519,69 +716,36 @@ export default function HomePage() {
               </Button>
             </div>
           </FadeInWhenVisible>
-
-          {/* Horizontal scrollable row */}
+ 
+          {/* Dynamic Best Sellers Apple Cards Carousel */}
           <FadeInWhenVisible>
-            <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
-              {bestSellers.map((product) => (
-                <div
-                  key={product.id}
-                  className="min-w-[220px] sm:min-w-[260px] snap-start shrink-0"
-                >
-                  <ProductCard product={product} />
-                </div>
-              ))}
+            <div className="relative overflow-visible w-full pt-4">
+              <AppleCardsCarousel
+                items={bestSellers.map((product, index) => (
+                  <AppleCard
+                    key={product.id}
+                    card={{
+                      category: product.category,
+                      title: product.name,
+                      src: product.images?.[0] || '/images/products/cashews-premium.png',
+                      content: <ProductAppleCardContent product={product} />,
+                    }}
+                    index={index}
+                    layout={true}
+                    layoutIdPrefix="bestsellers-"
+                  />
+                ))}
+              />
             </div>
           </FadeInWhenVisible>
         </div>
       </section>
 
-      {/* ──────── 5. Why Choose Us Section ──────── */}
-      <section className="py-14 sm:py-20 bg-muted/30">
+      {/* ──────── 5. New Arrivals Section ──────── */}
+      <section className="py-4 sm:py-6 bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeInWhenVisible>
-            <div className="text-center mb-10">
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif">
-                Why Choose Mealicious?
-              </h2>
-              <p className="mt-2 text-muted-foreground">
-                We take pride in delivering the best to your table
-              </p>
-            </div>
-          </FadeInWhenVisible>
-
-          <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {whyChooseItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <motion.div key={item.title} variants={staggerChild}>
-                  <Card className="text-center py-6 hover:shadow-md transition-shadow border-border/50 h-full">
-                    <CardContent className="p-4 sm:p-6 space-y-3 flex flex-col items-center">
-                      <div
-                        className={`rounded-full ${item.bg} p-3 sm:p-4`}
-                      >
-                        <Icon className={`h-6 w-6 sm:h-7 sm:w-7 ${item.color}`} />
-                      </div>
-                      <h3 className="font-semibold text-sm sm:text-base">
-                        {item.title}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        {item.desc}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )
-            })}
-          </StaggerContainer>
-        </div>
-      </section>
-
-      {/* ──────── 6. New Arrivals Section ──────── */}
-      <section className="py-14 sm:py-20 bg-background">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <FadeInWhenVisible>
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif">
                   New Arrivals
@@ -600,8 +764,8 @@ export default function HomePage() {
               </Button>
             </div>
           </FadeInWhenVisible>
-
-          <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+ 
+          <StaggerContainer className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
             {newArrivals.map((product) => (
               <motion.div key={product.id} variants={staggerChild}>
                 <ProductCard product={product} />
@@ -610,12 +774,64 @@ export default function HomePage() {
           </StaggerContainer>
         </div>
       </section>
-
-      {/* ──────── 7. Testimonials Section ──────── */}
-      <section className="py-14 sm:py-20 bg-muted/30">
+ 
+      {/* ──────── 6. Why Choose Us Section ──────── */}
+      <section className="py-4 sm:py-6 bg-muted/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeInWhenVisible>
-            <div className="text-center mb-10">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif">
+                Why Choose Mealicious?
+              </h2>
+              <p className="mt-2 text-muted-foreground">
+                We take pride in delivering the best to your table
+              </p>
+            </div>
+          </FadeInWhenVisible>
+ 
+          <div className="flex justify-center items-center py-6 sm:py-10 overflow-visible w-full min-h-[350px]">
+            <div className="scale-[0.6] min-[400px]:scale-[0.7] sm:scale-90 md:scale-100 origin-center transition-transform">
+              <BounceCards
+                containerWidth={600}
+                containerHeight={300}
+                animationDelay={0.3}
+                animationStagger={0.08}
+                easeType="elastic.out(1, 0.6)"
+                enableHover={true}
+                transformStyles={[
+                  'rotate(-8deg) translate(-160px)',
+                  'rotate(-3deg) translate(-55px)',
+                  'rotate(3deg) translate(55px)',
+                  'rotate(8deg) translate(160px)'
+                ]}
+              >
+                {whyChooseItems.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <div key={item.title} className="flex flex-col items-center justify-center p-4 text-center h-full w-full select-none">
+                      <div className="rounded-full bg-white border border-stone-200 p-3 shadow-sm mb-3">
+                        <Icon className={`h-6 w-6 ${item.color}`} />
+                      </div>
+                      <h3 className="font-semibold text-sm text-stone-900 mb-1.5 font-sans">
+                        {item.title}
+                      </h3>
+                      <p className="text-xs text-stone-600 leading-relaxed font-sans px-1">
+                        {item.desc}
+                      </p>
+                    </div>
+                  )
+                })}
+              </BounceCards>
+            </div>
+          </div>
+        </div>
+      </section>
+ 
+      {/* ──────── 7. Testimonials Section ──────── */}
+      <section className="py-4 sm:py-6 bg-muted/30">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <FadeInWhenVisible>
+            <div className="text-center mb-6">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif">
                 What Our Customers Say
               </h2>
@@ -625,87 +841,50 @@ export default function HomePage() {
             </div>
           </FadeInWhenVisible>
 
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {testimonials.map((t) => (
-              <motion.div key={t.id} variants={staggerChild}>
-                <Card className="h-full border-border/50 hover:shadow-md transition-shadow">
-                  <CardContent className="p-5 sm:p-6 space-y-4">
-                    {/* Avatar + info */}
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-orange-400 font-bold text-sm">
-                        {t.avatar}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate">
-                          {t.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {t.location}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Stars */}
-                    <div className="flex items-center gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3.5 w-3.5 ${
-                            i < t.rating
-                              ? 'fill-orange-400 text-orange-400'
-                              : 'fill-muted text-muted'
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Comment */}
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      &ldquo;{t.comment}&rdquo;
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </StaggerContainer>
+          <StaggerTestimonials />
         </div>
       </section>
 
       {/* ──────── 8. Newsletter Section ──────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-orange-400 via-orange-400 to-orange-400">
-        <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-blue-400/20 blur-3xl" />
-        <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-orange-400/15 blur-3xl" />
+      <div className="relative overflow-hidden bg-[#f97316] py-8 sm:py-12 text-white font-sans">
+        
+        
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <FadeInWhenVisible>
             <div className="text-center max-w-xl mx-auto space-y-4">
               <h2 className="text-3xl sm:text-4xl font-bold text-white font-serif">
                 Join the Mealicious Family
               </h2>
-              <p className="text-blue-100">
+              <p className="text-orange-50">
                 Subscribe for exclusive offers and health tips
               </p>
               <div className="flex flex-col sm:flex-row gap-3 mt-6">
                 <Input
                   type="email"
                   placeholder="Enter your email address"
-                  className="h-11 bg-white/10 border-white/20 text-white placeholder:text-blue-200 focus-visible:border-white/50 focus-visible:ring-white/30"
+                  className="h-11 bg-white/20 border-white/30 text-white placeholder:text-orange-100 focus-visible:border-white/50 focus-visible:ring-white/30"
                 />
                 <Button
                   size="lg"
-                  className="bg-white text-orange-400 hover:bg-blue-50 font-semibold shrink-0"
+                  className="bg-white text-orange-500 hover:bg-orange-50 font-semibold shrink-0"
                 >
                   <Send className="h-4 w-4 mr-1" />
                   Subscribe
                 </Button>
               </div>
-              <p className="text-xs text-blue-200/80 mt-2">
+              <p className="text-xs text-orange-200/80 mt-2">
                 No spam, unsubscribe anytime. We respect your privacy.
               </p>
             </div>
           </FadeInWhenVisible>
         </div>
-      </section>
+      </div>
     </div>
   )
 }
+
+
+
+
+

@@ -32,7 +32,7 @@ procedure is documented there.
 ## Development Commands
 
 ```bash
-bun run dev          # Start dev server on port 3000
+bun run dev          # Start dev server on port 3005
 bun run build        # Build for production (standalone output)
 bun run start        # Run production server via bun from .next/standalone
 bun run lint         # ESLint

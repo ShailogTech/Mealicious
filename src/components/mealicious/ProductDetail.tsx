@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   PackageSearch,
   Check,
+  Trash2,
 } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -37,6 +38,9 @@ export default function ProductDetail() {
   const addToCart = useAppStore((s) => s.addToCart)
   const toggleWishlist = useAppStore((s) => s.toggleWishlist)
   const isInWishlist = useAppStore((s) => s.isInWishlist)
+  const cartItems = useAppStore((s) => s.cartItems)
+  const removeFromCart = useAppStore((s) => s.removeFromCart)
+  const updateQuantity = useAppStore((s) => s.updateQuantity)
   const allProducts = useCatalogStore((s) => s.products)
 
   const product = useMemo(
@@ -112,6 +116,17 @@ export default function ProductDetail() {
     return { price: product.price, salePrice: product.salePrice }
   }, [product, effectiveVariants])
 
+  const variantString = Object.entries(effectiveVariants)
+    .map(([, val]) => typeof val === 'object' && val ? (val as any).value : val)
+    .join(' / ')
+
+  const cartItem = useMemo(() => {
+    if (!product) return undefined
+    return cartItems.find(
+      (ci) => ci.productId === product.id && (ci.variant || 'default') === (variantString || 'default')
+    )
+  }, [cartItems, product, variantString])
+
   if (!product) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -170,10 +185,6 @@ export default function ProductDetail() {
     if (product.stock <= 20) return { label: `Low Stock - Only ${product.stock} left!`, color: 'text-orange-400', bgColor: 'bg-orange-50' }
     return { label: 'In Stock', color: 'text-orange-400', bgColor: 'bg-blue-50' }
   })()
-
-  const variantString = Object.entries(effectiveVariants)
-    .map(([, val]) => typeof val === 'object' && val ? (val as any).value : val)
-    .join(' / ')
 
   function handleAddToCart() {
     const firstVariant = product.variants[0]
@@ -486,15 +497,58 @@ export default function ProductDetail() {
 
           {/* Action Buttons */}
           <div className="flex gap-3 mb-4 flex-wrap">
-            <Button
-              size="lg"
-              disabled={product.stock === 0}
-              className="flex-1 min-w-[160px] bg-orange-400 hover:bg-orange-400 text-white h-12 text-base font-semibold"
-              onClick={handleAddToCart}
-            >
-              <ShoppingCart className="h-5 w-5 mr-2" />
-              Add to Cart
-            </Button>
+            {cartItem ? (
+              <div className="flex-1 min-w-[200px] flex items-center gap-2 h-12 bg-stone-50 border border-stone-200 rounded-xl px-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 border-stone-200 text-stone-600 hover:bg-stone-100"
+                  onClick={() => {
+                    const newQty = cartItem.quantity - 1
+                    if (newQty <= 0) {
+                      removeFromCart(product.id, variantString)
+                    } else {
+                      updateQuantity(product.id, newQty, variantString)
+                    }
+                  }}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <div className="flex-1 flex items-center justify-center text-sm font-bold text-stone-900">
+                  {cartItem.quantity} in Cart
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 border-stone-200 text-stone-600 hover:bg-stone-100"
+                  onClick={() => {
+                    updateQuantity(product.id, cartItem.quantity + 1, variantString)
+                  }}
+                  disabled={cartItem.quantity >= product.stock}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-red-500 hover:text-red-650 hover:bg-red-50"
+                  onClick={() => removeFromCart(product.id, variantString)}
+                  aria-label="Remove from cart"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="lg"
+                disabled={product.stock === 0}
+                className="flex-1 min-w-[160px] bg-orange-400 hover:bg-orange-400 text-white h-12 text-base font-semibold"
+                onClick={handleAddToCart}
+              >
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                Add to Cart
+              </Button>
+            )}
             <Button
               size="lg"
               variant="outline"
