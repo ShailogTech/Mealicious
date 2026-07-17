@@ -1,7 +1,219 @@
 import { PrismaClient } from '@prisma/client'
 import { products, categories, blogPosts } from '../src/lib/data'
+import { hashPassword } from '../src/lib/password'
 
 const prisma = new PrismaClient()
+
+// ---------------------------------------------------------------------------
+// ERP seed (Phase 1) — /administrator module. Idempotent upserts.
+// Company identity, RBAC matrix, shifts, productivity rules, and the two
+// retained admin accounts (CEO + COO). See
+// docs/superpowers/specs/2026-07-16-administrator-erp-phase1-design.md
+// ---------------------------------------------------------------------------
+const ERP_COMPANY = {
+  id: 'company',
+  companyName: 'MEALICIOUS VENTURES PRIVATE LIMITED',
+  address: '1/108, Elappankadu, Uthamasolapuram, Salem – 636010, Tamil Nadu, India',
+  phone: '+91 63798 58978',
+  email: 'support@mealicious.store',
+  website: 'www.mealicious.store',
+  gstin: '33AAUCM2609Q1ZT',
+  fssai: '22426193000120',
+  cin: 'U10799TZ2025PTC037179',
+  invoicePrefix: 'MVPL-RETAIL-IN',
+  invoiceStart: 10,
+  bankName: '',
+  bankAccountName: '',
+  bankAccountNumber: '',
+  bankIFSC: '',
+  bankBranch: '',
+  upiId: '',
+  terms: 'Goods once sold will not be taken back. Interest @18% p.a. will be charged if payment is not made within 15 days.',
+  footerText: "Thank you for shopping with us! Nature's Goodness in Every Bite.",
+  darkMode: false,
+}
+
+const ERP_SHIFTS = [
+  { name: 'Office Hours', start: '09:00', end: '18:00', type: 'Standard' },
+  { name: 'Factory Shift A', start: '06:00', end: '14:00', type: 'Rotational' },
+  { name: 'Factory Shift B', start: '14:00', end: '22:00', type: 'Rotational' },
+  { name: 'Night Shift', start: '22:00', end: '06:00', type: 'Rotational' },
+  { name: 'Hybrid / Remote', start: 'Flexible', end: 'Flexible', type: 'Remote' },
+  { name: 'Flexible Timing', start: 'Flexible', end: 'Flexible', type: 'Flexible' },
+]
+
+const ERP_PRODUCTIVITY_RULES = {
+  minWorkingHours: 8,
+  maxWorkingHours: 10,
+  minProductivityPct: 60,
+  maxBreakMinutes: 60,
+  idleThresholdMinutes: 30,
+  lateLoginAfter: '09:15',
+  earlyLogoutBefore: '17:45',
+}
+
+// Per-module RBAC matrix: which roles can view each module key.
+// SUPER_ADMIN always bypasses; adminusers/companysettings hard-locked below.
+// Ported verbatim from the ERP's seedDatabase() permission logic.
+function buildErpPermissions() {
+  const modules = [
+    'dashboard', 'employees', 'rbac', 'shifts', 'productivity', 'teams',
+    'groups', 'messages', 'mailtickets', 'crm', 'sales', 'billing', 'invoices',
+    'companysettings', 'purchase', 'vendors', 'inventory', 'manufacturing',
+    'supplychain', 'projects', 'finance', 'analytics', 'reports', 'adminusers',
+    'assets', 'franchise', 'distributors', 'retail', 'investors', 'campaigns',
+  ]
+  const matrix: Record<string, Record<string, boolean>> = {}
+  for (const key of modules) {
+    matrix[key] = {
+      SUPER_ADMIN: true,
+      FINANCE: ['dashboard', 'finance', 'invoices', 'billing', 'purchase', 'reports', 'messages', 'mailtickets'].includes(key),
+      SALES: ['dashboard', 'crm', 'sales', 'billing', 'invoices', 'customers', 'marketing', 'reports', 'messages', 'mailtickets'].includes(key),
+      OPS: ['dashboard', 'inventory', 'manufacturing', 'supplychain', 'assets', 'reports', 'messages', 'mailtickets'].includes(key),
+      HR: ['dashboard', 'employees', 'shifts', 'productivity', 'teams', 'groups', 'reports', 'messages', 'mailtickets'].includes(key),
+      EMPLOYEE: ['dashboard', 'projects', 'messages', 'mailtickets'].includes(key),
+      INTERN: ['dashboard', 'projects', 'messages', 'mailtickets'].includes(key),
+    }
+  }
+  // Hard-locked super-admin-only modules — stripped from the togglable matrix.
+  delete matrix['adminusers']
+  delete matrix['companysettings']
+  return matrix
+}
+
+async function seedErp() {
+  console.log('Seeding ERP system config…')
+  await prisma.erpSystemConfig.upsert({
+    where: { id: 'singleton' },
+    update: {},
+    create: {
+      id: 'singleton',
+      company: ERP_COMPANY,
+      invoiceCounter: ERP_COMPANY.invoiceStart,
+      productivityRules: ERP_PRODUCTIVITY_RULES,
+      permissions: buildErpPermissions(),
+      shifts: ERP_SHIFTS,
+    },
+  })
+
+  console.log('Seeding ERP employees (CEO + COO)…')
+  const leadership = [
+    {
+      employeeCode: 'MV-EMP-0001',
+      name: 'Jeevapriyan Elangovan',
+      dept: 'Administration',
+      role: 'Founder & CEO',
+      officialEmail: 'jeevs@mealicious.store',
+      status: 'Active',
+    },
+    {
+      employeeCode: 'MV-EMP-0002',
+      name: 'Praveen Shanmugam',
+      dept: 'Administration',
+      role: 'Co-founder & COO',
+      officialEmail: 'praveen@mealicious.store',
+      status: 'Active',
+    },
+  ]
+
+  for (const lead of leadership) {
+    await prisma.erpEmployee.upsert({
+      where: { employeeCode: lead.employeeCode },
+      update: {
+        name: lead.name,
+        dept: lead.dept,
+        role: lead.role,
+        officialEmail: lead.officialEmail,
+        status: lead.status,
+        nationality: 'Indian',
+        country: 'India',
+        city: 'Salem',
+        workLocation: 'Salem — Registered Office',
+        monitoring: {
+          loginTracking: true,
+          idleTracking: true,
+          taskTracking: true,
+          attendanceTracking: true,
+          performanceRating: true,
+          overtimeTracking: true,
+          readOnly: false,
+        },
+      },
+      create: {
+        employeeCode: lead.employeeCode,
+        name: lead.name,
+        dept: lead.dept,
+        role: lead.role,
+        officialEmail: lead.officialEmail,
+        status: lead.status,
+        nationality: 'Indian',
+        country: 'India',
+        city: 'Salem',
+        workLocation: 'Salem — Registered Office',
+        shift: 'Office Hours',
+        employmentType: 'Full-Time',
+        orgLevel: 'Manager',
+        joinedAt: new Date(),
+        monitoring: {
+          loginTracking: true,
+          idleTracking: true,
+          taskTracking: true,
+          attendanceTracking: true,
+          performanceRating: true,
+          overtimeTracking: true,
+          readOnly: false,
+        },
+      },
+    })
+  }
+
+  console.log('Seeding ERP admin accounts (CEO + COO)…')
+  // These two passwords come from the ERP README. CHANGE ON FIRST LOGIN.
+  const accounts = [
+    {
+      email: 'jeevs@mealicious.store',
+      username: 'Mealicious',
+      displayName: 'Jeevapriyan Elangovan',
+      initials: 'JE',
+      password: 'Mealicious@2212',
+      employeeCode: 'MV-EMP-0001',
+    },
+    {
+      email: 'praveen@mealicious.store',
+      username: 'praveen.coo',
+      displayName: 'Praveen Shanmugam',
+      initials: 'PS',
+      password: 'Praveen@2212',
+      employeeCode: 'MV-EMP-0002',
+    },
+  ]
+
+  for (const acct of accounts) {
+    const emp = await prisma.erpEmployee.findUnique({ where: { employeeCode: acct.employeeCode } })
+    const existing = await prisma.adminUser.findUnique({ where: { email: acct.email } })
+    if (existing) {
+      // Keep existing password on re-seed; only relink employee if needed.
+      await prisma.adminUser.update({
+        where: { email: acct.email },
+        data: emp ? { linkedEmployee: { connect: { id: emp.id } } } : {},
+      })
+      continue
+    }
+    await prisma.adminUser.create({
+      data: {
+        email: acct.email,
+        username: acct.username,
+        displayName: acct.displayName,
+        initials: acct.initials,
+        hashedPassword: await hashPassword(acct.password),
+        role: 'SUPER_ADMIN',
+        isActive: true,
+        linkedEmployee: emp ? { connect: { id: emp.id } } : undefined,
+      },
+    })
+  }
+  console.log('  ERP seed complete.')
+}
 
 async function main() {
   console.log('Seeding categories…')
@@ -184,6 +396,8 @@ async function main() {
       }
     })
   }
+
+  await seedErp()
 
   console.log('Seed complete.')
 }

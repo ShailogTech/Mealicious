@@ -1,6 +1,7 @@
 import { jwtVerify, createRemoteJWKSet } from 'jose'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromRequest } from './admin-session'
+import { db } from './db'
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || ''
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'admin@mealicious.com')
@@ -47,6 +48,23 @@ export async function requireAdmin(req: Request) {
     return {
       user: { uid: 'session-admin', email: session.email, isAdmin: true } as AuthUser,
       error: null as NextResponse | null,
+    }
+  }
+  // ERP SUPER_ADMIN path (additive): an active SUPER_ADMIN AdminUser also
+  // qualifies as a store admin via the shared admin-session cookie. The env
+  // path above is checked first and unchanged, so this can never regress /admin.
+  if (session) {
+    try {
+      const erpUser = await db.adminUser.findUnique({ where: { email: session.email.toLowerCase() } })
+      if (erpUser?.isActive && erpUser.role === 'SUPER_ADMIN') {
+        return {
+          user: { uid: erpUser.id, email: erpUser.email, isAdmin: true } as AuthUser,
+          error: null as NextResponse | null,
+        }
+      }
+    } catch {
+      // If the ERP lookup fails (e.g. table not migrated yet), fall through to
+      // existing paths rather than blocking store admin access.
     }
   }
   // Stub-admin bypass: testing only, gated by ALLOW_STUB_ADMIN env flag

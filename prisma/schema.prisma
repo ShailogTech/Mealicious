@@ -239,3 +239,196 @@ model PushSubscription {
   email     String?
   createdAt DateTime @default(now())
 }
+
+// ============================================================================
+// ERP MODULES (Phase 1) — served at /administrator
+// These are additive and isolated from the commerce models above. The store
+// admin (/admin) and ERP (/administrator) share the same database but not the
+// same tables. Money is Float to match the rest of this schema's convention.
+// See docs/superpowers/specs/2026-07-16-administrator-erp-phase1-design.md
+// ============================================================================
+
+enum ErpRole {
+  SUPER_ADMIN // role-superadmin — full unrestricted access
+  FINANCE     // role-finance
+  SALES       // role-sales
+  OPS         // role-ops
+  HR          // role-hr
+  EMPLOYEE    // role-employee
+  INTERN      // role-intern
+}
+
+// Authentication source for /administrator. Reuses the admin-session JWT cookie
+// (see src/lib/erp-session.ts). role drives the per-module RBAC matrix stored
+// on ErpSystemConfig.permissions. linkedEmployee carries discipline/intern logic.
+model AdminUser {
+  id              String      @id @default(cuid())
+  email           String      @unique
+  username        String?
+  hashedPassword  String
+  displayName     String
+  initials        String?
+  photoUrl        String?
+  role            ErpRole     @default(EMPLOYEE)
+  isActive        Boolean     @default(true)
+  suspendedAt     DateTime?
+  suspendedReason String?
+  lastLoginAt     DateTime?
+  linkedEmployee  ErpEmployee?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([role])
+}
+
+model ErpEmployee {
+  id             String   @id @default(cuid())
+  employeeCode   String   @unique
+  name           String
+  dept           String
+  role           String // job title
+  city           String?
+  shift          String?
+  team           String?
+  orgLevel       String? // Staff | Team Lead | Manager
+  employmentType String   @default("Full-Time") // Full-Time | Intern
+  internshipStart DateTime?
+  internshipEnd   DateTime?
+  status         String   @default("Active") // Active|On Leave|Warned|Suspended|Terminated
+  joinedAt       DateTime?
+  salary         Float    @default(0)
+
+  // Personal
+  gender                 String?
+  dob                    DateTime?
+  bloodGroup             String?
+  maritalStatus          String?
+  nationality            String? // default "Indian"
+  aadhaar                String?
+  pan                    String?
+  passportNumber         String?
+  drivingLicense         String?
+  personalEmail          String?
+  officialEmail          String?
+  emergencyContactName   String?
+  emergencyContactNumber String?
+
+  // Address
+  permanentAddress String?
+  currentAddress   String?
+  state            String?
+  pinCode          String?
+  country          String?
+  workLocation     String?
+
+  // Bank
+  bankName          String?
+  bankAccountNumber String?
+  bankIFSC          String?
+  bankBranch        String?
+
+  // Productivity (auto-initialized on create; deep-cut UI deferred to Phase 2)
+  productivityScore Int    @default(0)
+  attendancePct     Float  @default(100)
+  avgHours          Float  @default(0)
+  taskCompletionPct Float  @default(0)
+  idlePct           Float  @default(0)
+  performanceRating String?
+  monitoring        Json   @default("{}")
+
+  adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  adminUserId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dept])
+  @@index([status])
+}
+
+model ErpCustomer {
+  id            String      @id @default(cuid())
+  name          String
+  mobile        String?     @unique
+  whatsapp      String?
+  address       String?
+  gst           String?
+  email         String?
+  city          String?
+  segment       String      @default("Retail")
+  loyaltyPoints Int         @default(0)
+  totalOrders   Int         @default(0)
+  lifetimeValue Float       @default(0)
+  invoices      ErpInvoice[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([city])
+}
+
+model ErpInvoice {
+  id            String      @id @default(cuid())
+  invoiceNumber String      @unique // prefix + ErpSystemConfig.invoiceCounter
+  date          DateTime
+  customerName  String
+  mobile        String?
+  address       String?
+  customerGst   String?
+  items         Json // [{sno,name,qty,price,disc,taxable,gstPct,total}]
+  subtotal      Float   @default(0)
+  discountTotal Float   @default(0)
+  gstTotal      Float   @default(0)
+  cgst          Float   @default(0)
+  sgst          Float   @default(0)
+  grandTotal    Float   @default(0)
+  paymentMode   String   @default("Cash")
+  customerId    String?
+  customer      ErpCustomer? @relation(fields: [customerId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([date])
+  @@index([customerId])
+}
+
+model ErpInventoryItem {
+  id           String   @id @default(cuid())
+  name         String
+  category     String
+  hsn          String?
+  sku          String?
+  stock        Int      @default(0)
+  reorderLevel Int      @default(0)
+  price        Float    @default(0) // GST-inclusive
+  gstPct       Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([category])
+}
+
+model ErpTransaction {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  type      String // Income | Expense
+  category  String
+  amount    Float
+  account   String // "Axis Bank - Current" | "HDFC - Savings" | "Cash"
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([date])
+}
+
+// Singleton (id="singleton"). Holds company identity, invoice counter,
+// productivity rules, the RBAC permission matrix, and shift templates.
+model ErpSystemConfig {
+  id               String   @id @default("singleton")
+  company          Json // REAL_COMPANY_SETTINGS port
+  invoiceCounter   Int      @default(10)
+  productivityRules Json
+  permissions      Json // { [moduleKey]: { [ErpRole]: boolean } }
+  shifts           Json // [{name,start,end,type}]
+  updatedAt        DateTime @updatedAt
+}
