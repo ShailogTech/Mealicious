@@ -10,7 +10,7 @@
  * a prop passed from a server component to a client component.
  */
 
-export type ErpModuleSection = 'Overview' | 'People & Operations' | 'Production & Growth'
+export type ErpModuleSection = 'Overview' | 'People & Operations' | 'Production & Growth' | 'Network'
 
 export interface ErpModule {
   key: string
@@ -155,12 +155,62 @@ export const ERP_MODULES: ErpModule[] = [
     href: '/administrator/finance',
     icon: 'wallet',
   },
+  {
+    key: 'analytics',
+    label: 'Analytics',
+    section: 'Production & Growth',
+    href: '/administrator/analytics',
+    icon: 'chart',
+  },
+  {
+    key: 'franchise',
+    label: 'Franchise',
+    section: 'Network',
+    href: '/administrator/franchise',
+    icon: 'building',
+  },
+  {
+    key: 'distributorportal',
+    label: 'Distributor Portal',
+    section: 'Network',
+    href: '/administrator/distributors',
+    icon: 'shopping-bag',
+  },
+  {
+    key: 'retail',
+    label: 'Retail Stores',
+    section: 'Network',
+    href: '/administrator/retail',
+    icon: 'store',
+  },
+  {
+    key: 'investors',
+    label: 'Investors',
+    section: 'Network',
+    href: '/administrator/investors',
+    icon: 'banknote',
+  },
+  {
+    key: 'campaigns',
+    label: 'Campaigns',
+    section: 'Network',
+    href: '/administrator/campaigns',
+    icon: 'megaphone',
+  },
+  {
+    key: 'assets',
+    label: 'Assets',
+    section: 'Network',
+    href: '/administrator/assets',
+    icon: 'wrench',
+  },
 ]
 
 export const ERP_SECTIONS: ErpModuleSection[] = [
   'Overview',
   'People & Operations',
   'Production & Growth',
+  'Network',
 ]
 
 /** Filter modules visible to a given role, using the RBAC matrix. */

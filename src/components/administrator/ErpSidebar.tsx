@@ -6,6 +6,7 @@ import {
   LogOut, X, LayoutDashboard, Users, FileText, Boxes, Wallet,
   Clock, Activity, UsersRound, UserCircle, MessageCircle, Mail,
   Handshake, ShoppingCart, Package, Store, Factory, Truck, KanbanSquare,
+  ChartColumn, Building2, ShoppingBag, Banknote, Megaphone, Wrench,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -38,6 +39,12 @@ const MODULE_ICONS: Record<string, LucideIcon> = {
   factory: Factory,
   truck: Truck,
   kanban: KanbanSquare,
+  chart: ChartColumn,
+  building: Building2,
+  'shopping-bag': ShoppingBag,
+  banknote: Banknote,
+  megaphone: Megaphone,
+  wrench: Wrench,
 }
 
 function resolveModuleIcon(key: string): LucideIcon {
