@@ -275,6 +275,8 @@ model AdminUser {
   suspendedReason String?
   lastLoginAt     DateTime?
   linkedEmployee  ErpEmployee?
+  messagesSent    ErpMessage[] @relation("ErpMessageFrom")
+  ticketsOpened   ErpTicket[]  @relation("ErpTicketFrom")
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -338,6 +340,11 @@ model ErpEmployee {
 
   adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
   adminUserId String? @unique
+
+  // Phase 2 back-relations (the other side of ErpTeam / ErpTimeLog).
+  leadingTeam  ErpTeam?   @relation("ErpTeamLead")
+  managingTeam ErpTeam?   @relation("ErpTeamManager")
+  timeLogs     ErpTimeLog[] @relation("ErpTimeLogEmployee")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -431,4 +438,117 @@ model ErpSystemConfig {
   permissions      Json // { [moduleKey]: { [ErpRole]: boolean } }
   shifts           Json // [{name,start,end,type}]
   updatedAt        DateTime @updatedAt
+}
+
+// ============================================================================
+// ERP MODULES (Phase 2) — HRMS deep-cuts: shifts, teams, groups, messaging,
+// tickets, productivity time-tracking. All additive + isolated from commerce.
+// ============================================================================
+
+// Work schedules (promoted from ErpSystemConfig.shifts JSON to a real table so
+// they're CRUD-editable). The shifts JSON in config is retained as the seed.
+model ErpShift {
+  id        String   @id @default(cuid())
+  name      String
+  start     String // "09:00" or "Flexible"
+  end       String
+  type      String // Standard | Rotational | Remote | Flexible | Custom
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Teams — one or two per department, each with a team lead + reporting manager.
+// Members are derived from ErpEmployee.team + ErpEmployee.dept at render time.
+model ErpTeam {
+  id           String   @id @default(cuid())
+  name         String
+  dept         String
+  teamLeadId   String?  @unique
+  teamLead     ErpEmployee? @relation("ErpTeamLead", fields: [teamLeadId], references: [id], onDelete: SetNull)
+  managerId    String?  @unique
+  manager      ErpEmployee? @relation("ErpTeamManager", fields: [managerId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([dept])
+}
+
+// Cross-department groups (ad-hoc, owner-managed). Members stored as a JSON
+// array of employee IDs since membership is many-to-many and lightweight.
+model ErpGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerName   String?
+  memberIds   Json     @default("[]") // [employeeId, ...]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// User-to-user direct messages + reply threads. toUserId null = HR_TEAM broadcast
+// (visible to HR + SuperAdmin via canSeeMessage logic in the route).
+model ErpMessage {
+  id         String   @id @default(cuid())
+  fromUserId String
+  fromUser   AdminUser @relation("ErpMessageFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  fromName   String
+  toUserId   String? // null = HR_TEAM broadcast
+  toName     String
+  subject    String
+  body       String
+  status     String   @default("Unread") // Unread | Read
+  replies    Json     @default("[]") // [{fromName, body, date}]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([fromUserId])
+  @@index([toUserId])
+}
+
+// Broadcast announcements from HR/SuperAdmin to all employees or one department.
+model ErpAnnouncement {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  audience  String // "all" | department name
+  fromName  String
+  createdAt DateTime @default(now())
+
+  @@index([audience])
+}
+
+// Internal helpdesk tickets with priority escalation and comment threads.
+model ErpTicket {
+  id           String   @id @default(cuid())
+  subject      String
+  body         String
+  category     String
+  priority     String   @default("Normal") // Low | Normal | High | Critical
+  status       String   @default("Open") // Open | In Progress | Resolved | Closed
+  fromUserId   String
+  fromUser     AdminUser @relation("ErpTicketFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  fromName     String
+  fromDept     String?
+  assignedDept String?
+  comments     Json     @default("[]") // [{fromName, body, date}]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([priority])
+}
+
+// Punch in/out time logs feeding the productivity dashboard.
+model ErpTimeLog {
+  id           String   @id @default(cuid())
+  employeeId   String
+  employee     ErpEmployee @relation("ErpTimeLogEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+  date         DateTime
+  punchIn      String? // "09:12"
+  punchOut     String? // "18:04"
+  status       String // Present | Late | Half-day | Absent | Leave
+  workedMinutes Int    @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([employeeId, date])
 }

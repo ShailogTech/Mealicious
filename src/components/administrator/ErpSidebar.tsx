@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LogOut, X, LayoutDashboard, Users, FileText, Boxes, Wallet,
+  Clock, Activity, UsersRound, UserCircle, MessageCircle, Mail,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -23,6 +24,12 @@ const MODULE_ICONS: Record<string, LucideIcon> = {
   file: FileText,
   boxes: Boxes,
   wallet: Wallet,
+  clock: Clock,
+  activity: Activity,
+  'users-2': UsersRound,
+  'users-3': UserCircle,
+  'message-circle': MessageCircle,
+  mail: Mail,
 }
 
 function resolveModuleIcon(key: string): LucideIcon {
