@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   LogOut, X, LayoutDashboard, Users, FileText, Boxes, Wallet,
   Clock, Activity, UsersRound, UserCircle, MessageCircle, Mail,
+  Handshake, ShoppingCart, Package, Store,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -30,6 +31,10 @@ const MODULE_ICONS: Record<string, LucideIcon> = {
   'users-3': UserCircle,
   'message-circle': MessageCircle,
   mail: Mail,
+  handshake: Handshake,
+  'shopping-cart': ShoppingCart,
+  package: Package,
+  store: Store,
 }
 
 function resolveModuleIcon(key: string): LucideIcon {

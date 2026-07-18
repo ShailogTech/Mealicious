@@ -552,3 +552,68 @@ model ErpTimeLog {
 
   @@index([employeeId, date])
 }
+
+// ============================================================================
+// ERP MODULES (Phase 3) — Commercial cluster: CRM leads, sales orders, purchase
+// orders, vendors. All additive + isolated from commerce.
+// ============================================================================
+
+// CRM leads — sales pipeline contacts with deal stage + value.
+model ErpLead {
+  id        String   @id @default(cuid())
+  name      String   // contact name
+  company   String   @default("")
+  stage     String   @default("New") // New|Contacted|Qualified|Proposal Sent|Won|Lost
+  value     Float    @default(0) // deal value
+  owner     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stage])
+}
+
+// Sales orders / POS records. Each row is a sale: customer, product, qty, amount.
+model ErpSalesOrder {
+  id        String   @id @default(cuid())
+  customer  String
+  product   String   @default("")
+  qty       Int      @default(0)
+  amount    Float    @default(0)
+  channel   String   @default("Website") // Website|Amazon|Flipkart|Retail Store|Distributor|Modern Trade
+  status    String   @default("Completed") // Completed|Pending|Processing|Cancelled
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([channel])
+}
+
+// Purchase orders raised against vendors.
+model ErpPurchaseOrder {
+  id        String   @id @default(cuid())
+  vendor    String
+  date      DateTime @default(now())
+  amount    Float    @default(0)
+  status    String   @default("Pending Approval") // Received|Pending Approval|In Transit|Rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([vendor])
+}
+
+// Vendor / supplier records with outstanding balance.
+model ErpVendor {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("Raw Material") // Raw Material|Packaging|Logistics|Co-Packer|Ingredient Importer
+  city        String   @default("")
+  rating      Float    @default(0)
+  status      String   @default("Active") // Active|Under Review
+  outstanding Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+}
