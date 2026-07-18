@@ -12,13 +12,23 @@ interface ErpShellProps {
   companyName: string
   userName: string
   userRole: string
+  /** Department accent color (defaults to brand amber if not set). */
+  accent?: string
+  accentStrong?: string
 }
 
-export function ErpShell({ children, modules, companyName, userName, userRole }: ErpShellProps) {
+export function ErpShell({ children, modules, companyName, userName, userRole, accent, accentStrong }: ErpShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Department theming: expose accent as a CSS var consumed by the sidebar
+  // active-state and the topbar ERP badge.
+  const style = {
+    ...(accent ? { '--erp-accent': accent } : null),
+    ...(accentStrong ? { '--erp-accent-strong': accentStrong } : null),
+  } as React.CSSProperties
+
   return (
-    <div className="flex h-screen overflow-hidden bg-stone-50">
+    <div className="flex h-screen overflow-hidden bg-stone-50" style={style}>
       <ErpSidebar
         modules={modules}
         companyName={companyName}

@@ -15,6 +15,7 @@ import {
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButton } from '@/components/administrator/ErpExportButton'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Employee extends ErpRow {
@@ -94,7 +95,7 @@ const FIELDS: ErpField[] = [
   { key: 'bankBranch', label: 'Branch', type: 'text', section: 'Bank' },
 ]
 
-export function EmployeesClient({ employees }: { employees: Employee[] }) {
+export function EmployeesClient({ employees, canExport }: { employees: Employee[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Employee[]>(employees)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Employee | null>(null)
@@ -206,7 +207,11 @@ export function EmployeesClient({ employees }: { employees: Employee[] }) {
 
   return (
     <div>
-      <ErpPageHeader title="Employees / HRMS" description="Manage employee records, logins, and discipline." />
+      <ErpPageHeader
+        title="Employees / HRMS"
+        description="Manage employee records, logins, and discipline."
+        action={<ErpExportButton model="employees" canExport={!!canExport} />}
+      />
 
       <ErpDataTable
         columns={COLUMNS}

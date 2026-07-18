@@ -117,9 +117,10 @@ export function ErpSidebar({ modules, companyName, userName, userRole, open, onC
                           className={cn(
                             'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                             active
-                              ? 'bg-amber-500 text-stone-950'
+                              ? 'text-stone-950'
                               : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900',
                           )}
+                          style={active ? { backgroundColor: 'var(--erp-accent, #f59e0b)' } : undefined}
                         >
                           <Icon className="h-4 w-4 shrink-0" />
                           <span className="truncate">{m.label}</span>
@@ -136,13 +137,18 @@ export function ErpSidebar({ modules, companyName, userName, userRole, open, onC
         {/* User footer */}
         <div className="border-t border-stone-200 p-3 shrink-0">
           <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
+            <Link href="/administrator/profile" className="min-w-0 hover:opacity-80" onClick={onClose}>
               <p className="text-sm font-semibold text-stone-900 truncate" title={companyName}>{companyName}</p>
               <p className="text-xs text-stone-500 truncate">{userName} · {userRole}</p>
+            </Link>
+            <div className="flex items-center gap-1 shrink-0">
+              <Button variant="ghost" size="icon" className="h-8 w-8" asChild title="My Profile">
+                <Link href="/administrator/profile" onClick={onClose}><UserCircle className="h-4 w-4" /></Link>
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleLogout} title="Sign out">
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleLogout} title="Sign out">
-              <LogOut className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </aside>

@@ -204,6 +204,13 @@ export const ERP_MODULES: ErpModule[] = [
     href: '/administrator/assets',
     icon: 'wrench',
   },
+  {
+    key: 'companysettings',
+    label: 'Company Settings',
+    section: 'Network',
+    href: '/administrator/company-settings',
+    icon: 'building',
+  },
 ]
 
 export const ERP_SECTIONS: ErpModuleSection[] = [
