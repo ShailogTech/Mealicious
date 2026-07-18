@@ -1,68 +1,72 @@
-import {
-  LayoutDashboard, Users, FileText, Boxes, Wallet, type LucideIcon,
-} from 'lucide-react'
-
 /**
  * ERP module registry — the subset built in Phase 1. Each entry's `key`
  * matches a key in the RBAC matrix (ErpSystemConfig.permissions) and is the
  * argument passed to requireErpRole(). Future phases append entries here.
+ *
+ * IMPORTANT: the serializable module data (key/label/section/href) lives here
+ * so it can cross the Server→Client Component boundary. The icon (a Lucide
+ * component, which is a function and therefore NOT serializable) is resolved
+ * client-side via MODULE_ICONS in resolveModuleIcon() — never put an icon in
+ * a prop passed from a server component to a client component.
  */
+
+export type ErpModuleSection = 'Overview' | 'People & Operations' | 'Production & Growth'
+
 export interface ErpModule {
   key: string
   label: string
-  icon: LucideIcon
-  section: 'Overview' | 'People & Operations' | 'Production & Growth'
+  section: ErpModuleSection
   href: string
-  /** Module keys not yet built in Phase 1; sidebar links resolve to a "coming soon" page. */
-  comingSoon?: boolean
+  /** Icon name resolved client-side via resolveModuleIcon(). */
+  icon: string
 }
 
 export const ERP_MODULES: ErpModule[] = [
   {
     key: 'dashboard',
     label: 'Dashboard',
-    icon: LayoutDashboard,
     section: 'Overview',
     href: '/administrator/dashboard',
+    icon: 'dashboard',
   },
   {
     key: 'employees',
     label: 'Employees / HRMS',
-    icon: Users,
     section: 'People & Operations',
     href: '/administrator/employees',
+    icon: 'users',
   },
   {
     key: 'billing',
     label: 'New Invoice',
-    icon: FileText,
     section: 'People & Operations',
     href: '/administrator/billing',
+    icon: 'file',
   },
   {
     key: 'invoices',
     label: 'Invoices',
-    icon: FileText,
     section: 'People & Operations',
     href: '/administrator/invoices',
+    icon: 'file',
   },
   {
     key: 'inventory',
     label: 'Inventory',
-    icon: Boxes,
     section: 'Production & Growth',
     href: '/administrator/inventory',
+    icon: 'boxes',
   },
   {
     key: 'finance',
     label: 'Finance',
-    icon: Wallet,
     section: 'Production & Growth',
     href: '/administrator/finance',
+    icon: 'wallet',
   },
 ]
 
-export const ERP_SECTIONS: ErpModule['section'][] = [
+export const ERP_SECTIONS: ErpModuleSection[] = [
   'Overview',
   'People & Operations',
   'Production & Growth',

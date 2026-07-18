@@ -2,11 +2,32 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LogOut, X } from 'lucide-react'
+import {
+  LogOut, X, LayoutDashboard, Users, FileText, Boxes, Wallet,
+  type LucideIcon,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import type { ErpModule } from '@/lib/administrator/modules'
 import { ERP_SECTIONS } from '@/lib/administrator/modules'
+
+/**
+ * Icon lookup — kept here (client-side) because Lucide icons are functions and
+ * cannot be serialized across the Server→Client Component boundary. The module
+ * registry carries only an `icon` string key; we resolve it to the component
+ * here in the client component.
+ */
+const MODULE_ICONS: Record<string, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  users: Users,
+  file: FileText,
+  boxes: Boxes,
+  wallet: Wallet,
+}
+
+function resolveModuleIcon(key: string): LucideIcon {
+  return MODULE_ICONS[key] ?? FileText
+}
 
 interface ErpSidebarProps {
   modules: ErpModule[]
@@ -66,7 +87,7 @@ export function ErpSidebar({ modules, companyName, userName, userRole, open, onC
                 <ul className="space-y-1">
                   {sectionModules.map((m) => {
                     const active = pathname.startsWith(m.href)
-                    const Icon = m.icon
+                    const Icon = resolveModuleIcon(m.icon)
                     return (
                       <li key={m.key}>
                         <Link
