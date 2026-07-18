@@ -128,6 +128,27 @@ export const ERP_MODULES: ErpModule[] = [
     icon: 'boxes',
   },
   {
+    key: 'manufacturing',
+    label: 'Manufacturing',
+    section: 'Production & Growth',
+    href: '/administrator/manufacturing',
+    icon: 'factory',
+  },
+  {
+    key: 'supplychain',
+    label: 'Supply Chain',
+    section: 'Production & Growth',
+    href: '/administrator/supply-chain',
+    icon: 'truck',
+  },
+  {
+    key: 'projects',
+    label: 'Projects',
+    section: 'Production & Growth',
+    href: '/administrator/projects',
+    icon: 'kanban',
+  },
+  {
     key: 'finance',
     label: 'Finance',
     section: 'Production & Growth',

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   LogOut, X, LayoutDashboard, Users, FileText, Boxes, Wallet,
   Clock, Activity, UsersRound, UserCircle, MessageCircle, Mail,
-  Handshake, ShoppingCart, Package, Store,
+  Handshake, ShoppingCart, Package, Store, Factory, Truck, KanbanSquare,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -35,6 +35,9 @@ const MODULE_ICONS: Record<string, LucideIcon> = {
   'shopping-cart': ShoppingCart,
   package: Package,
   store: Store,
+  factory: Factory,
+  truck: Truck,
+  kanban: KanbanSquare,
 }
 
 function resolveModuleIcon(key: string): LucideIcon {

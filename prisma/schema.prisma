@@ -617,3 +617,52 @@ model ErpVendor {
   @@index([type])
   @@index([status])
 }
+
+// ============================================================================
+// ERP MODULES (Phase 4) — Production & logistics: manufacturing orders,
+// shipments, and projects (kanban). All additive + isolated from commerce.
+// ============================================================================
+
+// Manufacturing / production orders assigned to a machine line.
+model ErpProductionOrder {
+  id        String    @id @default(cuid())
+  product   String
+  qty       Int       @default(0)
+  machine   String    @default("") // Roaster-1|Roaster-2|Packing Line A|Packing Line B|Mixer-1
+  status    String    @default("Scheduled") // Scheduled|In Progress|Completed|QC Hold
+  endDate   DateTime? // target end
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status])
+}
+
+// Supply-chain shipments between facilities.
+model ErpShipment {
+  id        String   @id @default(cuid())
+  fromLocation String @map("from") // Salem Factory|Coimbatore Warehouse|Chennai Hub
+  toLocation   String @map("to")
+  vehicle   String   @default("")
+  status    String   @default("Dispatched") // Dispatched|In Transit|Delivered|Delayed
+  eta       DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+// Projects rendered as a kanban board (status = Backlog|In Progress|Review|Done).
+model ErpProject {
+  id        String    @id @default(cuid())
+  name      String
+  owner     String    @default("")
+  dept      String    @default("")
+  progress  Int       @default(0) // 0-100
+  status    String    @default("Backlog") // Backlog|In Progress|Review|Done
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status])
+  @@index([dept])
+}
