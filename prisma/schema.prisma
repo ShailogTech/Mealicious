@@ -239,3 +239,513 @@ model PushSubscription {
   email     String?
   createdAt DateTime @default(now())
 }
+
+// ============================================================================
+// ERP MODULES (Phase 1) — served at /administrator
+// These are additive and isolated from the commerce models above. The store
+// admin (/admin) and ERP (/administrator) share the same database but not the
+// same tables. Money is Float to match the rest of this schema's convention.
+// See docs/superpowers/specs/2026-07-16-administrator-erp-phase1-design.md
+// ============================================================================
+
+enum ErpRole {
+  SUPER_ADMIN // role-superadmin — full unrestricted access
+  FINANCE     // role-finance
+  SALES       // role-sales
+  OPS         // role-ops
+  HR          // role-hr
+  EMPLOYEE    // role-employee
+  INTERN      // role-intern
+}
+
+// Authentication source for /administrator. Reuses the admin-session JWT cookie
+// (see src/lib/erp-session.ts). role drives the per-module RBAC matrix stored
+// on ErpSystemConfig.permissions. linkedEmployee carries discipline/intern logic.
+model AdminUser {
+  id              String      @id @default(cuid())
+  email           String      @unique
+  username        String?
+  hashedPassword  String
+  displayName     String
+  initials        String?
+  photoUrl        String?
+  role            ErpRole     @default(EMPLOYEE)
+  isActive        Boolean     @default(true)
+  suspendedAt     DateTime?
+  suspendedReason String?
+  lastLoginAt     DateTime?
+  linkedEmployee  ErpEmployee?
+  messagesSent    ErpMessage[] @relation("ErpMessageFrom")
+  ticketsOpened   ErpTicket[]  @relation("ErpTicketFrom")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([role])
+}
+
+model ErpEmployee {
+  id             String   @id @default(cuid())
+  employeeCode   String   @unique
+  name           String
+  dept           String
+  role           String // job title
+  city           String?
+  shift          String?
+  team           String?
+  orgLevel       String? // Staff | Team Lead | Manager
+  employmentType String   @default("Full-Time") // Full-Time | Intern
+  internshipStart DateTime?
+  internshipEnd   DateTime?
+  status         String   @default("Active") // Active|On Leave|Warned|Suspended|Terminated
+  joinedAt       DateTime?
+  salary         Float    @default(0)
+
+  // Personal
+  gender                 String?
+  dob                    DateTime?
+  bloodGroup             String?
+  maritalStatus          String?
+  nationality            String? // default "Indian"
+  aadhaar                String?
+  pan                    String?
+  passportNumber         String?
+  drivingLicense         String?
+  personalEmail          String?
+  officialEmail          String?
+  emergencyContactName   String?
+  emergencyContactNumber String?
+
+  // Address
+  permanentAddress String?
+  currentAddress   String?
+  state            String?
+  pinCode          String?
+  country          String?
+  workLocation     String?
+
+  // Bank
+  bankName          String?
+  bankAccountNumber String?
+  bankIFSC          String?
+  bankBranch        String?
+
+  // Productivity (auto-initialized on create; deep-cut UI deferred to Phase 2)
+  productivityScore Int    @default(0)
+  attendancePct     Float  @default(100)
+  avgHours          Float  @default(0)
+  taskCompletionPct Float  @default(0)
+  idlePct           Float  @default(0)
+  performanceRating String?
+  monitoring        Json   @default("{}")
+
+  adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  adminUserId String? @unique
+
+  // Phase 2 back-relations (the other side of ErpTeam / ErpTimeLog).
+  leadingTeam  ErpTeam?   @relation("ErpTeamLead")
+  managingTeam ErpTeam?   @relation("ErpTeamManager")
+  timeLogs     ErpTimeLog[] @relation("ErpTimeLogEmployee")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dept])
+  @@index([status])
+}
+
+model ErpCustomer {
+  id            String      @id @default(cuid())
+  name          String
+  mobile        String?     @unique
+  whatsapp      String?
+  address       String?
+  gst           String?
+  email         String?
+  city          String?
+  segment       String      @default("Retail")
+  loyaltyPoints Int         @default(0)
+  totalOrders   Int         @default(0)
+  lifetimeValue Float       @default(0)
+  invoices      ErpInvoice[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([city])
+}
+
+model ErpInvoice {
+  id            String      @id @default(cuid())
+  invoiceNumber String      @unique // prefix + ErpSystemConfig.invoiceCounter
+  date          DateTime
+  customerName  String
+  mobile        String?
+  address       String?
+  customerGst   String?
+  items         Json // [{sno,name,qty,price,disc,taxable,gstPct,total}]
+  subtotal      Float   @default(0)
+  discountTotal Float   @default(0)
+  gstTotal      Float   @default(0)
+  cgst          Float   @default(0)
+  sgst          Float   @default(0)
+  grandTotal    Float   @default(0)
+  paymentMode   String   @default("Cash")
+  customerId    String?
+  customer      ErpCustomer? @relation(fields: [customerId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([date])
+  @@index([customerId])
+}
+
+model ErpInventoryItem {
+  id           String   @id @default(cuid())
+  name         String
+  category     String
+  hsn          String?
+  sku          String?
+  stock        Int      @default(0)
+  reorderLevel Int      @default(0)
+  price        Float    @default(0) // GST-inclusive
+  gstPct       Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([category])
+}
+
+model ErpTransaction {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  type      String // Income | Expense
+  category  String
+  amount    Float
+  account   String // "Axis Bank - Current" | "HDFC - Savings" | "Cash"
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([date])
+}
+
+// Singleton (id="singleton"). Holds company identity, invoice counter,
+// productivity rules, the RBAC permission matrix, and shift templates.
+model ErpSystemConfig {
+  id               String   @id @default("singleton")
+  company          Json // REAL_COMPANY_SETTINGS port
+  invoiceCounter   Int      @default(10)
+  productivityRules Json
+  permissions      Json // { [moduleKey]: { [ErpRole]: boolean } }
+  shifts           Json // [{name,start,end,type}]
+  updatedAt        DateTime @updatedAt
+}
+
+// ============================================================================
+// ERP MODULES (Phase 2) — HRMS deep-cuts: shifts, teams, groups, messaging,
+// tickets, productivity time-tracking. All additive + isolated from commerce.
+// ============================================================================
+
+// Work schedules (promoted from ErpSystemConfig.shifts JSON to a real table so
+// they're CRUD-editable). The shifts JSON in config is retained as the seed.
+model ErpShift {
+  id        String   @id @default(cuid())
+  name      String
+  start     String // "09:00" or "Flexible"
+  end       String
+  type      String // Standard | Rotational | Remote | Flexible | Custom
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Teams — one or two per department, each with a team lead + reporting manager.
+// Members are derived from ErpEmployee.team + ErpEmployee.dept at render time.
+model ErpTeam {
+  id           String   @id @default(cuid())
+  name         String
+  dept         String
+  teamLeadId   String?  @unique
+  teamLead     ErpEmployee? @relation("ErpTeamLead", fields: [teamLeadId], references: [id], onDelete: SetNull)
+  managerId    String?  @unique
+  manager      ErpEmployee? @relation("ErpTeamManager", fields: [managerId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([dept])
+}
+
+// Cross-department groups (ad-hoc, owner-managed). Members stored as a JSON
+// array of employee IDs since membership is many-to-many and lightweight.
+model ErpGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerName   String?
+  memberIds   Json     @default("[]") // [employeeId, ...]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// User-to-user direct messages + reply threads. toUserId null = HR_TEAM broadcast
+// (visible to HR + SuperAdmin via canSeeMessage logic in the route).
+model ErpMessage {
+  id         String   @id @default(cuid())
+  fromUserId String
+  fromUser   AdminUser @relation("ErpMessageFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  fromName   String
+  toUserId   String? // null = HR_TEAM broadcast
+  toName     String
+  subject    String
+  body       String
+  status     String   @default("Unread") // Unread | Read
+  replies    Json     @default("[]") // [{fromName, body, date}]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([fromUserId])
+  @@index([toUserId])
+}
+
+// Broadcast announcements from HR/SuperAdmin to all employees or one department.
+model ErpAnnouncement {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  audience  String // "all" | department name
+  fromName  String
+  createdAt DateTime @default(now())
+
+  @@index([audience])
+}
+
+// Internal helpdesk tickets with priority escalation and comment threads.
+model ErpTicket {
+  id           String   @id @default(cuid())
+  subject      String
+  body         String
+  category     String
+  priority     String   @default("Normal") // Low | Normal | High | Critical
+  status       String   @default("Open") // Open | In Progress | Resolved | Closed
+  fromUserId   String
+  fromUser     AdminUser @relation("ErpTicketFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  fromName     String
+  fromDept     String?
+  assignedDept String?
+  comments     Json     @default("[]") // [{fromName, body, date}]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([priority])
+}
+
+// Punch in/out time logs feeding the productivity dashboard.
+model ErpTimeLog {
+  id           String   @id @default(cuid())
+  employeeId   String
+  employee     ErpEmployee @relation("ErpTimeLogEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+  date         DateTime
+  punchIn      String? // "09:12"
+  punchOut     String? // "18:04"
+  status       String // Present | Late | Half-day | Absent | Leave
+  workedMinutes Int    @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([employeeId, date])
+}
+
+// ============================================================================
+// ERP MODULES (Phase 3) — Commercial cluster: CRM leads, sales orders, purchase
+// orders, vendors. All additive + isolated from commerce.
+// ============================================================================
+
+// CRM leads — sales pipeline contacts with deal stage + value.
+model ErpLead {
+  id        String   @id @default(cuid())
+  name      String   // contact name
+  company   String   @default("")
+  stage     String   @default("New") // New|Contacted|Qualified|Proposal Sent|Won|Lost
+  value     Float    @default(0) // deal value
+  owner     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stage])
+}
+
+// Sales orders / POS records. Each row is a sale: customer, product, qty, amount.
+model ErpSalesOrder {
+  id        String   @id @default(cuid())
+  customer  String
+  product   String   @default("")
+  qty       Int      @default(0)
+  amount    Float    @default(0)
+  channel   String   @default("Website") // Website|Amazon|Flipkart|Retail Store|Distributor|Modern Trade
+  status    String   @default("Completed") // Completed|Pending|Processing|Cancelled
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([channel])
+}
+
+// Purchase orders raised against vendors.
+model ErpPurchaseOrder {
+  id        String   @id @default(cuid())
+  vendor    String
+  date      DateTime @default(now())
+  amount    Float    @default(0)
+  status    String   @default("Pending Approval") // Received|Pending Approval|In Transit|Rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([vendor])
+}
+
+// Vendor / supplier records with outstanding balance.
+model ErpVendor {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("Raw Material") // Raw Material|Packaging|Logistics|Co-Packer|Ingredient Importer
+  city        String   @default("")
+  rating      Float    @default(0)
+  status      String   @default("Active") // Active|Under Review
+  outstanding Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+}
+
+// ============================================================================
+// ERP MODULES (Phase 4) — Production & logistics: manufacturing orders,
+// shipments, and projects (kanban). All additive + isolated from commerce.
+// ============================================================================
+
+// Manufacturing / production orders assigned to a machine line.
+model ErpProductionOrder {
+  id        String    @id @default(cuid())
+  product   String
+  qty       Int       @default(0)
+  machine   String    @default("") // Roaster-1|Roaster-2|Packing Line A|Packing Line B|Mixer-1
+  status    String    @default("Scheduled") // Scheduled|In Progress|Completed|QC Hold
+  endDate   DateTime? // target end
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status])
+}
+
+// Supply-chain shipments between facilities.
+model ErpShipment {
+  id        String   @id @default(cuid())
+  fromLocation String @map("from") // Salem Factory|Coimbatore Warehouse|Chennai Hub
+  toLocation   String @map("to")
+  vehicle   String   @default("")
+  status    String   @default("Dispatched") // Dispatched|In Transit|Delivered|Delayed
+  eta       DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+// Projects rendered as a kanban board (status = Backlog|In Progress|Review|Done).
+model ErpProject {
+  id        String    @id @default(cuid())
+  name      String
+  owner     String    @default("")
+  dept      String    @default("")
+  progress  Int       @default(0) // 0-100
+  status    String    @default("Backlog") // Backlog|In Progress|Review|Done
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status])
+  @@index([dept])
+}
+
+// ============================================================================
+// ERP MODULES (Phase 5) — Network / growth cluster: franchise, distributors,
+// retail, investors, campaigns, assets. All additive + isolated from commerce.
+// ============================================================================
+
+model ErpFranchise {
+  id         String   @id @default(cuid())
+  name       String
+  city       String   @default("")
+  owner      String   @default("")
+  royaltyDue Float    @default(0)
+  status     String   @default("Active") // Active | Setup Pending
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([status])
+}
+
+model ErpDistributor {
+  id             String   @id @default(cuid())
+  name           String
+  city           String   @default("")
+  territory      String   @default("")
+  targetAchieved Float    @default(0) // percent
+  status         String   @default("Active") // Active | Probation
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status])
+}
+
+model ErpRetailStore {
+  id           String   @id @default(cuid())
+  name         String
+  city         String   @default("")
+  manager      String   @default("")
+  monthlySales Float    @default(0)
+  status       String   @default("Active") // Active | Under Review
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+}
+
+model ErpInvestor {
+  id             String    @id @default(cuid())
+  name           String
+  stake          String    @default("") // "5%"
+  investedAmount Float     @default(0)
+  lastUpdate     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model ErpCampaign {
+  id        String   @id @default(cuid())
+  name      String
+  channel   String   @default("") // Instagram|Google Ads|Email|WhatsApp|Influencer
+  budget    Float    @default(0)
+  leads     Int      @default(0)
+  roi       String   @default("") // "2.5x"
+  status    String   @default("Planned") // Live | Completed | Planned
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model ErpAsset {
+  id              String    @id @default(cuid())
+  name            String
+  type            String    @default("Machinery") // Machinery|Vehicle|IT Equipment|Furniture
+  assignedTo      String    @default("")
+  purchaseDate    DateTime?
+  warrantyExpiry  DateTime?
+  status          String    @default("In Use") // In Use | Under Maintenance | Idle
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([type])
+  @@index([status])
+}

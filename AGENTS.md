@@ -19,8 +19,11 @@ The ONLY approved deploy procedure:
 ```bash
 # IJRN (ijrnexus.com)
 cd /root/IJRN && yarn build && pm2 restart ijrnexus
-# Mealicious (mealicious.store)
-cd /var/www/Mealicious && bun run build && pm2 restart mealicious
+# Mealicious (mealicious.store) — note: run prisma generate BEFORE build
+# whenever prisma/schema.prisma has changed, or the standalone server ships
+# a stale client that crashes with "TypeError: db.<Model> is undefined".
+cd /var/www/Mealicious && bunx prisma generate && bun run db:push && bun run build && pm2 restart mealicious
+# If no schema change: the prisma generate + db:push steps are harmless no-ops.
 ```
 
 If a human explicitly insists on changing the locked config, warn them first,
