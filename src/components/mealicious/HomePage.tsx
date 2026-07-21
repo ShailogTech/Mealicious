@@ -268,6 +268,7 @@ const ProductAppleCardContent = ({ product }: { product: any }) => {
                 variant: activePricing.variantVal,
                 variantType: firstVariant?.type,
                 maxStock: product.stock,
+                gstPct: product.gstPct,
               })
             }}
           >

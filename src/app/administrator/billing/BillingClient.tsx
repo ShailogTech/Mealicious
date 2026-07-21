@@ -12,7 +12,11 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import { Plus, Trash2, ArrowLeft } from 'lucide-react'
+import { Plus, Trash2, ArrowLeft, MessageCircle, Check } from 'lucide-react'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog'
+import { buildInvoiceWaLink, openInvoiceWaLink } from '@/lib/administrator/whatsapp-share'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { computeInvoice, type InvoiceLineInput } from '@/lib/administrator/invoice-math'
 
@@ -38,6 +42,7 @@ export function BillingClient() {
   const [paymentMode, setPaymentMode] = useState('Cash')
   const [lines, setLines] = useState<Line[]>([{ ...EMPTY_LINE }])
   const [saving, setSaving] = useState(false)
+  const [createdInvoice, setCreatedInvoice] = useState<{ invoiceNumber: string; customerName: string; mobile: string | null; grandTotal: number } | null>(null)
 
   const inputs: InvoiceLineInput[] = lines.map((l) => ({
     name: l.name, qty: Number(l.qty) || 0, price: Number(l.price) || 0, disc: Number(l.disc) || 0, gstPct: Number(l.gstPct) || 0,
@@ -65,8 +70,14 @@ export function BillingClient() {
         toast.error(data.error || 'Failed to create invoice')
         return
       }
+      const { invoice } = await res.json()
       toast.success('Invoice created')
-      router.push('/administrator/invoices')
+      setCreatedInvoice({
+        invoiceNumber: invoice.invoiceNumber,
+        customerName: invoice.customerName,
+        mobile: invoice.mobile,
+        grandTotal: invoice.grandTotal,
+      })
     } finally {
       setSaving(false)
     }
@@ -188,6 +199,36 @@ export function BillingClient() {
           </Button>
         </div>
       </div>
+
+      {/* Success dialog — WhatsApp share + go to invoices */}
+      <Dialog open={!!createdInvoice} onOpenChange={(o) => { if (!o) { setCreatedInvoice(null); router.push('/administrator/invoices') } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invoice created</DialogTitle>
+          </DialogHeader>
+          {createdInvoice && (
+            <div className="space-y-3 py-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Check className="h-4 w-4 text-emerald-600" />
+                <span><b>{createdInvoice.invoiceNumber}</b> for {createdInvoice.customerName} — ₹{createdInvoice.grandTotal.toFixed(2)}</span>
+              </div>
+              <p className="text-xs text-stone-500">Share the invoice via WhatsApp to your customer:</p>
+              <div className="flex gap-2">
+                {buildInvoiceWaLink(createdInvoice.mobile, createdInvoice.invoiceNumber, createdInvoice.customerName, createdInvoice.grandTotal) ? (
+                  <Button className="flex-1" onClick={() => openInvoiceWaLink(buildInvoiceWaLink(createdInvoice.mobile, createdInvoice.invoiceNumber, createdInvoice.customerName, createdInvoice.grandTotal))}>
+                    <MessageCircle className="h-4 w-4" /> Send via WhatsApp
+                  </Button>
+                ) : (
+                  <p className="text-xs text-amber-600 flex-1">No mobile number on this invoice — WhatsApp share unavailable.</p>
+                )}
+                <Button variant="outline" onClick={() => { setCreatedInvoice(null); router.push('/administrator/invoices') }}>
+                  Done
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

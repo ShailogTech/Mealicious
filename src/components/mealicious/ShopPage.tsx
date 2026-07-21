@@ -447,6 +447,7 @@ function ListProductCard({ product }: { product: Product }) {
                 variant: firstVariant?.options[0],
                 variantType: firstVariant?.type,
                 maxStock: product.stock,
+                gstPct: product.gstPct,
               })
             }}
           >
@@ -693,6 +694,23 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Category banner (shown when a category is selected) */}
+      {(() => {
+        const activeSlug = selectedCategories[0] || pageParams.category
+        const activeCat = activeSlug ? categories.find((c) => c.slug === activeSlug) : null
+        if (!activeCat || !activeCat.image) return null
+        return (
+          <div className="relative w-full h-40 sm:h-56 overflow-hidden bg-muted">
+            <img
+              src={activeCat.image}
+              alt={activeCat.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          </div>
+        )
+      })()}
+
       {/* Header Section */}
       <div className="bg-gradient-to-b from-blue-50 to-background border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -705,14 +723,20 @@ export default function ShopPage() {
               Home
             </button>
             <ChevronDown className="h-3 w-3 -rotate-90" />
-            <span className="text-foreground font-medium">Shop</span>
+            <span className="text-foreground font-medium">
+              {selectedCategories[0] || pageParams.category
+                ? categories.find((c) => c.slug === (selectedCategories[0] || pageParams.category))?.name || 'Shop'
+                : 'Shop'}
+            </span>
           </nav>
 
           {/* Title and count */}
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
             <div>
               <h1 className="text-3xl sm:text-4xl font-serif font-extrabold text-foreground">
-                Shop Premium Dry Fruits & Snacks
+                {selectedCategories[0] || pageParams.category
+                  ? categories.find((c) => c.slug === (selectedCategories[0] || pageParams.category))?.name || 'Shop'
+                  : 'Shop Premium Dry Fruits & Snacks'}
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
                 Showing {filteredProducts.length} of {products.length} products

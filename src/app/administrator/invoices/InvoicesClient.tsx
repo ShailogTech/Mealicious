@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Download, FileText } from 'lucide-react'
+import { Download, FileText, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import type { ErpColumn, ErpRow } from '@/components/administrator/erp-crud-types'
 import { downloadInvoicePdf, type PdfInvoice, type PdfCompany } from '@/lib/administrator/invoice-pdf'
+import { buildInvoiceWaLink, openInvoiceWaLink } from '@/lib/administrator/whatsapp-share'
 
 interface Invoice extends ErpRow {
   id: string
@@ -83,13 +84,25 @@ export function InvoicesClient({ invoices }: { invoices: Invoice[] }) {
       <ErpDataTable
         columns={COLUMNS}
         rows={rows}
-        renderRowActions={(row) => (
-          <Button variant="ghost" size="icon" className="h-8 w-8"
-            disabled={downloadingId === (row as Invoice).id}
-            onClick={() => handleDownload(row)} title="Download PDF (letterhead)">
-            <Download className="h-3.5 w-3.5" />
-          </Button>
-        )}
+        renderRowActions={(row) => {
+          const inv = row as Invoice
+          const waLink = buildInvoiceWaLink(inv.mobile, inv.invoiceNumber, inv.customerName, inv.grandTotal)
+          return (
+            <>
+              {waLink && (
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600"
+                  onClick={() => openInvoiceWaLink(waLink)} title="Send via WhatsApp">
+                  <MessageCircle className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" className="h-8 w-8"
+                disabled={downloadingId === inv.id}
+                onClick={() => handleDownload(row)} title="Download PDF (letterhead)">
+                <Download className="h-3.5 w-3.5" />
+              </Button>
+            </>
+          )
+        }}
         emptyMessage="No invoices yet. Create one from “New Invoice”."
       />
     </div>

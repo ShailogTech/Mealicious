@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { Search, Eye, FileText, Truck, ExternalLink } from 'lucide-react'
+import { Search, Eye, FileText, Truck, ExternalLink, RefreshCw } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { adminFetch } from '@/lib/admin-fetch'
 
@@ -80,6 +80,17 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
     }
   }
 
+  async function syncToErp(id: string) {
+    try {
+      const res = await adminFetch(`/api/admin/orders/${id}/sync-erp`, { method: 'POST' })
+      const data = await res.json()
+      toast.success(`Synced to ERP: ${data.erpInvoiceNumber}`)
+      startTransition(() => router.refresh())
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'ERP sync failed')
+    }
+  }
+
   return (
     <div className="p-6">
       <div className="flex items-center gap-3 mb-4">
@@ -143,6 +154,10 @@ export function OrdersClient({ orders }: { orders: Order[] }) {
                   <Button size="icon" variant="ghost" title="Create Shiprocket Shipment" className="text-blue-600"
                     onClick={() => { setShipOrder(o); setShipResult(null); setShipOpen(true) }}>
                     <Truck className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" title="Sync to ERP invoice" className="text-emerald-600"
+                    onClick={() => syncToErp(o.id)}>
+                    <RefreshCw className="h-4 w-4" />
                   </Button>
                 </td>
               </tr>

@@ -33,6 +33,7 @@ interface ProductData {
   stock: number
   lowStock: number
   sku: string
+  gstPct: number
   featured: boolean
   bestSeller: boolean
   isNew: boolean
@@ -52,7 +53,7 @@ interface Props {
 
 const EMPTY: ProductData = {
   name: '', slug: '', description: '', shortDesc: '', price: 0, salePrice: null,
-  images: '', categorySlug: '', stock: 100, lowStock: 10, sku: '',
+  images: '', categorySlug: '', stock: 100, lowStock: 10, sku: '', gstPct: 0,
   featured: false, bestSeller: false, isNew: false, isActive: true,
   tags: '', variants: '', nutrition: '',
 }
@@ -198,6 +199,7 @@ export function ProductForm({ open, onClose, onSaved, categories, initial }: Pro
         salePrice: form.salePrice ? Number(form.salePrice) : null,
         stock: Number(form.stock),
         lowStock: Number(form.lowStock),
+        gstPct: Number(form.gstPct) || 0,
         images: imagesVal,
         tags: tagsVal,
         variants: finalVariants,
@@ -254,6 +256,11 @@ export function ProductForm({ open, onClose, onSaved, categories, initial }: Pro
             <div className="space-y-1.5">
               <Label>SKU</Label>
               <Input value={form.sku} onChange={e => set('sku', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>GST % (slab — prices are inclusive)</Label>
+              <Input type="number" step="0.5" value={form.gstPct} onChange={e => set('gstPct', e.target.value)} />
+              <p className="text-xs text-neutral-400">e.g. 5, 12, 18. Set the product's GST slab; the storefront will show the CGST/SGST breakdown.</p>
             </div>
           </div>
 

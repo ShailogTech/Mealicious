@@ -16,6 +16,8 @@ import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
 import { ErpExportButton } from '@/components/administrator/ErpExportButton'
+import { ERP_MODULES } from '@/lib/administrator/modules'
+import { Checkbox } from '@/components/ui/checkbox'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Employee extends ErpRow {
@@ -108,6 +110,32 @@ export function EmployeesClient({ employees, canExport }: { employees: Employee[
   const [disciplineFor, setDisciplineFor] = useState<Employee | null>(null)
   const [disciplineStatus, setDisciplineStatus] = useState('Suspended')
   const [disciplineReason, setDisciplineReason] = useState('')
+
+  // Module-access override dialog.
+  const [accessFor, setAccessFor] = useState<Employee | null>(null)
+  const [accessModules, setAccessModules] = useState<string[]>([])
+
+  function openAccess(emp: Employee) {
+    setAccessFor(emp)
+    // Fetch the employee's current moduleAccess from the API.
+    fetch(`/api/administrator/employees/${emp.id}`).then((r) => r.json()).then((data) => {
+      setAccessModules(Array.isArray(data.employee?.moduleAccess) ? data.employee.moduleAccess : [])
+    }).catch(() => setAccessModules([]))
+  }
+
+  async function saveAccess() {
+    if (!accessFor) return
+    const res = await fetch(`/api/administrator/employees/${accessFor.id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ moduleAccess: accessModules }),
+    })
+    if (res.ok) { toast.success('Module access updated'); setAccessFor(null) }
+    else { toast.error('Update failed') }
+  }
+
+  function toggleModule(key: string) {
+    setAccessModules((m) => m.includes(key) ? m.filter((k) => k !== key) : [...m, key])
+  }
 
   function openCreate() { setEditing(null); setDrawerOpen(true) }
   function openEdit(row: ErpRow) { setEditing(row as Employee); setDrawerOpen(true) }
@@ -247,6 +275,19 @@ export function EmployeesClient({ employees, canExport }: { employees: Employee[
         </div>
       </div>
 
+      {/* Module access override — per-employee checklist of module keys */}
+      <div className="mt-4">
+        <p className="text-xs text-stone-500 mb-2">Module access overrides (grants additional modules on top of role):</p>
+        <div className="flex flex-wrap gap-2">
+          {rows.map((emp) => (
+            <Button key={emp.id} variant="outline" size="sm" className="h-7 text-xs"
+              onClick={() => openAccess(emp)}>
+              {emp.name}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       {/* Create-Login credentials dialog (shown once) */}
       <Dialog open={!!creds} onOpenChange={(o) => !o && setCreds(null)}>
         <DialogContent>
@@ -301,6 +342,32 @@ export function EmployeesClient({ employees, canExport }: { employees: Employee[
           <DialogFooter>
             <Button variant="outline" onClick={() => setDisciplineFor(null)}>Cancel</Button>
             <Button variant="destructive" onClick={submitDiscipline}>Apply</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Module access override dialog */}
+      <Dialog open={!!accessFor} onOpenChange={(o) => !o && setAccessFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Module Access — {accessFor?.name}</DialogTitle>
+            <DialogDescription>Check modules to grant access ON TOP OF the employee's role-based permissions.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-80 overflow-y-auto space-y-2 py-2">
+            {ERP_MODULES.map((m) => (
+              <label key={m.key} className="flex items-center gap-2.5 cursor-pointer hover:bg-stone-50 rounded p-1.5">
+                <Checkbox
+                  checked={accessModules.includes(m.key)}
+                  onCheckedChange={() => toggleModule(m.key)}
+                />
+                <span className="text-sm">{m.label}</span>
+                <span className="text-[10px] text-stone-400 ml-auto">{m.section}</span>
+              </label>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAccessFor(null)}>Cancel</Button>
+            <Button onClick={saveAccess}>Save Access</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

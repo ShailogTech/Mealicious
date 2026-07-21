@@ -202,6 +202,7 @@ export default function ProductDetail() {
       variant: variantString || firstOptionVal,
       variantType: firstVariant?.type,
       maxStock: product.stock,
+      gstPct: product.gstPct,
     })
   }
 

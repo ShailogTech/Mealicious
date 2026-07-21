@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Boxes,
-  Tag, ImageIcon, FileText, Star, MessageSquare, Mail, ArrowLeft, FolderTree, MessageCircle, Bell, LogOut
+  Tag, ImageIcon, FileText, Star, MessageSquare, Mail, ArrowLeft, FolderTree, MessageCircle, Bell, LogOut, Percent
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -16,6 +16,7 @@ const NAV = [
   { href: '/admin/customers', label: 'Customers', icon: Users },
   { href: '/admin/inventory', label: 'Inventory', icon: Boxes },
   { href: '/admin/coupons', label: 'Coupons', icon: Tag },
+  { href: '/admin/discounts', label: 'Discounts', icon: Percent },
   { href: '/admin/banners', label: 'Banners', icon: ImageIcon },
   { href: '/admin/blog', label: 'Blog', icon: FileText },
   { href: '/admin/reviews', label: 'Reviews', icon: Star },

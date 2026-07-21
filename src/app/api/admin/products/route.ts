@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
       nutrition: JSON.stringify(body.nutrition ?? {}),
       stock: Number(body.stock) || 0,
       sku: body.sku ?? null,
+      gstPct: Number(body.gstPct) || 0,
       featured: !!body.featured,
       bestSeller: !!body.bestSeller,
       isNew: !!body.isNew,

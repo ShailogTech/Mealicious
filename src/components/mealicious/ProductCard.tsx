@@ -27,11 +27,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const wishlisted = isInWishlist(product.id)
 
-  const cartItem = cartItems.find(
-    (ci) => ci.productId === product.id && (ci.variant || 'default') === (activePricing.variantVal || 'default')
-  )
-
-  // Calculate pricing based on first variant if it contains weight values with prices
+  // Calculate pricing based on first variant if it contains weight values with prices.
+  // Declared BEFORE cartItem below, which reads activePricing.variantVal —
+  // declaring them in the other order hits the Temporal Dead Zone and throws
+  // a ReferenceError on every render (the Add to Cart Application Error).
   const activePricing = (() => {
     const firstVariant = product.variants?.[0]
     if (firstVariant && firstVariant.options?.[0] && typeof firstVariant.options[0] === 'object') {
@@ -48,6 +47,10 @@ export default function ProductCard({ product }: ProductCardProps) {
       variantVal: firstVariant?.options?.[0]
     }
   })()
+
+  const cartItem = cartItems.find(
+    (ci) => ci.productId === product.id && (ci.variant || 'default') === (activePricing.variantVal || 'default')
+  )
 
   const discountPercent = activePricing.salePrice
     ? Math.round(((activePricing.price - activePricing.salePrice) / activePricing.price) * 100)
@@ -68,6 +71,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       variant: activePricing.variantVal,
       variantType: firstVariant?.type,
       maxStock: product.stock,
+      gstPct: product.gstPct,
     })
   }
 
@@ -163,6 +167,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                   </>
                 )}
               </div>
+              <p className="text-[10px] text-stone-400">
+                Incl. of all taxes{product.gstPct ? ` · GST ${product.gstPct}%` : ''}
+              </p>
 
               {/* Add to Cart / Quantity Manager */}
               {cartItem ? (

@@ -33,6 +33,7 @@ export interface CartItem {
   variant?: string
   variantType?: string
   maxStock: number
+  gstPct?: number // GST slab; prices are inclusive. Used for breakdown display.
 }
 
 export interface Address {
