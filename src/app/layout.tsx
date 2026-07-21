@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Montserrat } from "next/font/google";
 import "./globals.css";
-import "./retro-theme.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/Providers";
 import { Analytics } from "@/components/Analytics";
