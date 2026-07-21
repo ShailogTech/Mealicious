@@ -50,6 +50,19 @@ export default function CartSidebar() {
   })()
   const total = subtotal + shipping - discount
 
+  // GST breakdown (inclusive — derived from each line's gstPct + inclusive price).
+  const gstBreakdown = cartItems.reduce((acc, item) => {
+    const gstPct = item.gstPct ?? 0
+    if (gstPct <= 0) return acc
+    const lineInclusive = (item.salePrice ?? item.price) * item.quantity
+    const taxable = lineInclusive / (1 + gstPct / 100)
+    const gstAmount = lineInclusive - taxable
+    acc.gstTotal += gstAmount
+    acc.cgst += gstAmount / 2
+    acc.sgst += gstAmount / 2
+    return acc
+  }, { gstTotal: 0, cgst: 0, sgst: 0 })
+
   const handleApplyCoupon = () => {
     setCouponError('')
     if (!couponCode.trim()) {
@@ -328,6 +341,11 @@ export default function CartSidebar() {
                     <span className="font-medium text-orange-400">
                       -₹{discount}
                     </span>
+                  </div>
+                )}
+                {gstBreakdown.gstTotal > 0 && (
+                  <div className="flex items-center justify-between text-xs text-gray-400 pt-1">
+                    <span>Incl. CGST ₹{gstBreakdown.cgst.toFixed(2)} · SGST ₹{gstBreakdown.sgst.toFixed(2)}</span>
                   </div>
                 )}
                 {shipping > 0 && (

@@ -62,6 +62,7 @@ function buildErpPermissions() {
     'companysettings', 'purchase', 'vendors', 'inventory', 'manufacturing',
     'supplychain', 'projects', 'finance', 'analytics', 'reports', 'adminusers',
     'assets', 'franchise', 'distributors', 'retail', 'investors', 'campaigns',
+    'documents',
   ]
   const matrix: Record<string, Record<string, boolean>> = {}
   for (const key of modules) {
@@ -398,8 +399,35 @@ async function main() {
   }
 
   await seedErp()
+  await seedDiscounts()
 
   console.log('Seed complete.')
+}
+
+// ---------------------------------------------------------------------------
+// Discounts — migrates the previously-hardcoded COUPON_CODES + the 10% prepaid
+// rule into admin-managed Discount rows. Idempotent upserts keyed on code.
+// ---------------------------------------------------------------------------
+async function seedDiscounts() {
+  console.log('Seeding discounts…')
+  const discounts = [
+    // Auto-applied to online (prepaid) payments. Value is a percent.
+    { code: 'PREPAID10', type: 'prepaid', value: 10, minOrder: 0, description: '10% off on all prepaid orders (auto-applied)' },
+    // Coupon codes (previously in pricing.ts COUPON_CODES).
+    { code: 'MEAL10', type: 'percent', value: 10, minOrder: 499, description: '10% off on orders above ₹499' },
+    { code: 'SNACK20', type: 'percent', value: 20, minOrder: 999, description: '20% off on orders above ₹999' },
+    { code: 'FLAT50', type: 'flat', value: 50, minOrder: 599, description: '₹50 off on orders above ₹599' },
+    { code: 'WELCOME', type: 'percent', value: 15, minOrder: 399, description: '15% welcome discount on orders above ₹399' },
+    { code: 'IBUU50', type: 'flat', value: 49, minOrder: 0, description: '₹49 off (no minimum)' },
+  ]
+  for (const d of discounts) {
+    await prisma.discount.upsert({
+      where: { code: d.code },
+      update: { type: d.type, value: d.value, minOrder: d.minOrder, description: d.description },
+      create: { code: d.code, type: d.type, value: d.value, minOrder: d.minOrder, description: d.description, isActive: true },
+    })
+  }
+  console.log(`  ${discounts.length} discounts`)
 }
 
 main()

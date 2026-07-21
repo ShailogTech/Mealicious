@@ -74,6 +74,8 @@ model Product {
   stock       Int       @default(100)
   lowStock    Int       @default(10)
   sku         String?
+  gstPct      Float     @default(0) // GST slab % (5/12/18). Prices are GST-inclusive; this drives the breakdown display.
+  erpInventoryItemId String? @unique // optional 1:1 link to ErpInventoryItem for bidirectional stock sync
   featured    Boolean   @default(false)
   bestSeller  Boolean   @default(false)
   isNew       Boolean   @default(false)
@@ -108,6 +110,7 @@ model Order {
   shippingProvider String?
   notes         String?
   couponCode    String?
+  erpInvoiceNumber String? // set when this order has been synced into an ErpInvoice (idempotency guard)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -337,6 +340,9 @@ model ErpEmployee {
   idlePct           Float  @default(0)
   performanceRating String?
   monitoring        Json   @default("{}")
+  // Per-employee module-access override: array of module keys that GRANT
+  // access on top of the role-based RBAC matrix. Empty = role-based only.
+  moduleAccess      Json   @default("[]")
 
   adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
   adminUserId String? @unique
@@ -748,4 +754,42 @@ model ErpAsset {
 
   @@index([type])
   @@index([status])
+}
+
+// ============================================================================
+// Storefront discounts (replaces hardcoded COUPON_CODES + prepaid logic).
+// Admin-managed via /admin/discounts. Types:
+//   prepaid — auto-applied to online payments (value = percent)
+//   percent — coupon code, value = percent off
+//   flat    — coupon code, value = flat ₹ off
+// ============================================================================
+model Discount {
+  id           String   @id @default(cuid())
+  code         String   @unique // e.g. MEAL10, PREPAID10
+  type         String   // prepaid | percent | flat
+  value        Float    // percent (0-100) or flat ₹ amount
+  minOrder     Float    @default(0)
+  maxDiscount  Float?
+  isActive     Boolean  @default(true)
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([type])
+  @@index([isActive])
+}
+
+// ERP department documents — metadata-only storage (path/key, not bytes).
+// Grouped by department, listed on the /administrator/documents module.
+model ErpDepartmentDocument {
+  id         String   @id @default(cuid())
+  dept       String   // department name
+  title      String
+  fileName   String
+  fileUrl    String   // path/key (uploaded via /api/admin/upload or admin route)
+  fileType   String?  // mime hint, e.g. "application/pdf"
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+
+  @@index([dept])
 }

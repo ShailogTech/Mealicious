@@ -20,6 +20,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.nutrition !== undefined) data.nutrition = JSON.stringify(body.nutrition)
   if (body.stock !== undefined) data.stock = Number(body.stock)
   if (body.sku !== undefined) data.sku = body.sku
+  if (body.gstPct !== undefined) data.gstPct = Number(body.gstPct) || 0
   if (body.featured !== undefined) data.featured = !!body.featured
   if (body.bestSeller !== undefined) data.bestSeller = !!body.bestSeller
   if (body.isNew !== undefined) data.isNew = !!body.isNew

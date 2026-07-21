@@ -29,6 +29,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   ;['dob', 'joinedAt', 'internshipStart', 'internshipEnd'].forEach(date)
   if (body.salary != null) data.salary = Number(body.salary) || 0
   if (body.monitoring != null) data.monitoring = body.monitoring
+  if (body.moduleAccess != null) data.moduleAccess = Array.isArray(body.moduleAccess) ? body.moduleAccess : []
 
   // Discipline flow: when status moves to Suspended, also deactivate the
   // linked AdminUser login (so the employee can't sign in).

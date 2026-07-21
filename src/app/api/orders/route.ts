@@ -151,6 +151,12 @@ export async function POST(req: NextRequest) {
       }).catch(() => {})
     }
 
+    // Auto-sync this order into an ERP invoice (fire-and-forget, idempotent).
+    // Skips gracefully if the ERP tables/config aren't set up.
+    import('@/lib/erp-sync').then(({ createErpInvoiceFromOrder }) =>
+      createErpInvoiceFromOrder(order.id)
+    ).catch(() => {})
+
     return NextResponse.json({
       success: true,
       order: {

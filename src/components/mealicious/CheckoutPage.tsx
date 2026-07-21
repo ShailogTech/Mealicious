@@ -42,6 +42,9 @@ import {
   Loader2,
   Banknote,
   ArrowRight,
+  Trash2,
+  Minus,
+  Plus,
 } from 'lucide-react'
 
 const INDIAN_STATES = [
@@ -87,7 +90,7 @@ function getEstimatedDelivery(): string {
 }
 
 export default function CheckoutPage() {
-  const { cartItems, clearCart, navigate } = useAppStore()
+  const { cartItems, clearCart, navigate, removeFromCart, updateQuantity } = useAppStore()
 
   // Form state
   const [email, setEmail] = useState('')
@@ -819,20 +822,52 @@ export default function CheckoutPage() {
                             alt={item.name}
                             className="w-full h-full object-cover"
                           />
-                          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-orange-400 text-white text-[10px] font-bold flex items-center justify-center">
-                            {item.quantity}
-                          </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {item.name}
-                          </p>
-                          {item.variant && (
-                            <p className="text-xs text-gray-400">{item.variant}</p>
-                          )}
-                          <p className="text-sm font-semibold text-orange-400 mt-0.5">
-                            {formatPrice((item.salePrice ?? item.price) * item.quantity)}
-                          </p>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {item.name}
+                              </p>
+                              {item.variant && (
+                                <p className="text-xs text-gray-400">{item.variant}</p>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeFromCart(item.productId, item.variant)}
+                              className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                              aria-label={`Remove ${item.name} from cart`}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-between gap-2 mt-1.5">
+                            <p className="text-sm font-semibold text-orange-400">
+                              {formatPrice((item.salePrice ?? item.price) * item.quantity)}
+                            </p>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(item.productId, item.quantity - 1, item.variant)}
+                                disabled={item.quantity <= 1}
+                                className="w-6 h-6 rounded-md border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                aria-label="Decrease quantity"
+                              >
+                                <Minus className="h-3 w-3" />
+                              </button>
+                              <span className="text-xs font-semibold w-6 text-center">{item.quantity}</span>
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variant)}
+                                disabled={item.quantity >= item.maxStock}
+                                className="w-6 h-6 rounded-md border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                aria-label="Increase quantity"
+                              >
+                                <Plus className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}

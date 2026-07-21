@@ -146,27 +146,22 @@ export default function MealiciousStore() {
   }, [])
 
   return (
-    <div className="min-h-screen w-full bg-background relative text-gray-800 flex flex-col overflow-hidden">
-
-
-      <div className="relative z-10 flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentPage}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <PageRenderer page={currentPage} />
-            </motion.div>
-          </AnimatePresence>
-        </main>
-        <Footer />
-      </div>
-
+    <div className="min-h-screen flex flex-col bg-white">
+      <Header />
+      <main className="flex-1">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentPage}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <PageRenderer page={currentPage} />
+          </motion.div>
+        </AnimatePresence>
+      </main>
+      <Footer />
       <CartSidebar />
 
       {/* AI Chat support widget */}

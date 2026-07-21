@@ -141,7 +141,13 @@ export async function requireErpRole(req: Request, moduleKey: string): Promise<E
   const permissions = (config?.permissions ?? {}) as Record<string, Record<string, boolean>>
   const allowed = permissions[moduleKey]?.[user.role] ?? false
   if (!allowed) {
-    return { user: null, error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
+    // Per-employee access override: if the module key is in the linked
+    // employee's moduleAccess list, grant access on top of the role matrix.
+    // (Additive only — never removes role-granted access.)
+    const moduleAccess = (user.linkedEmployee?.moduleAccess ?? []) as string[]
+    if (!moduleAccess.includes(moduleKey)) {
+      return { user: null, error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
+    }
   }
   return { user, error: null }
 }

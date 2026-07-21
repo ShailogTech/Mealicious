@@ -14,6 +14,7 @@ export interface Product {
   nutrition: { calories: string; protein: string; fat: string; carbs: string; fiber: string }
   stock: number
   sku: string
+  gstPct?: number // GST slab % (5/12/18). Prices are GST-inclusive; this drives breakdown display.
   featured: boolean
   bestSeller: boolean
   isNew: boolean
