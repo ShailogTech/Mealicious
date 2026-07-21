@@ -28,10 +28,22 @@ echo "============================================"
 # --- Step 1: Pull latest code ---
 echo ""
 echo "[1/5] Pulling latest from origin/$BRANCH..."
+
+# Ensure we're on the right branch. If a checkout is needed but local
+# changes block it (e.g. a file mode change from chmod), stash first.
+CURRENT_BRANCH=$(git branch --show-current)
+if [ "$CURRENT_BRANCH" != "$BRANCH" ]; then
+  git stash -u 2>/dev/null || true
+  git checkout "$BRANCH"
+  git stash pop 2>/dev/null || true
+fi
+
+# Reset any local file-mode changes (chmod) that would block pull.
+git checkout -- . 2>/dev/null || true
+
 git fetch origin "$BRANCH"
-git checkout "$BRANCH"
-git pull origin "$BRANCH"
-echo "  ✓ Code updated"
+git reset --hard "origin/$BRANCH"
+echo "  ✓ Code updated (hard reset to origin/$BRANCH)"
 
 # --- Step 2: Install dependencies ---
 echo ""
