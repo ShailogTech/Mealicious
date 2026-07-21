@@ -118,23 +118,11 @@
   }
   html {
     scroll-behavior: smooth;
-    font-size: 16px;
   }
   body {
     @apply bg-background text-foreground antialiased;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    line-height: 1.6;
-    text-rendering: optimizeLegibility;
-  }
-  /* Headings: tighter line-height for better visual rhythm */
-  h1, h2, h3, h4, h5, h6 {
-    line-height: 1.25;
-    text-wrap: balance;
-  }
-  /* Improve paragraph readability */
-  p {
-    text-wrap: pretty;
   }
   a, button, [role="button"] {
     transition: color 200ms ease, background-color 200ms ease,
