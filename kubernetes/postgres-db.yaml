@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mealicious-db-pvc
+  namespace: mealicious
+  labels:
+    app: mealicious-db
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mealicious-db
+  namespace: mealicious
+  labels:
+    app: mealicious-db
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: mealicious-db
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mealicious-db
+  namespace: mealicious
+  labels:
+    app: mealicious-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mealicious-db
+  template:
+    metadata:
+      labels:
+        app: mealicious-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: mealicious-config
+                  key: postgres-user
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: mealicious-config
+                  key: postgres-db
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mealicious-secrets
+                  key: postgres-password
+          ports:
+            - containerPort: 5432
+              name: postgres
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "250m"
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - mealicious
+                - -d
+                - mealicious
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - mealicious
+                - -d
+                - mealicious
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: mealicious-db-pvc

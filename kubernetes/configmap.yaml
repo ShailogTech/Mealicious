@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mealicious-config
+  namespace: mealicious
+  labels:
+    app: mealicious
+data:
+  postgres-user: "mealicious"
+  postgres-db: "mealicious"
+  cashfree-env: "sandbox"
+  cashfree-app-id: "TEST11081858eb7074bf1d5c5b1b0b8e85818011"
+  nextauth-url: "http://localhost:3000"
+  admin-emails: "admin@mealicious.com"

@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mealicious
+  namespace: mealicious
+  labels:
+    app: mealicious
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mealicious
+  template:
+    metadata:
+      labels:
+        app: mealicious
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for postgres..."
+              until nc -z mealicious-db 5432; do
+                echo "  postgres not ready, waiting..."
+                sleep 2
+              done
+              echo "Postgres is ready!"
+      containers:
+        - name: mealicious
+          image: mealicious:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: DATABASE_URL
+              value: "postgresql://mealicious:mealicious_local_pw@mealicious-db:5432/mealicious?schema=public"
+            - name: ADMIN_SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mealicious-secrets
+                  key: admin-session-secret
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mealicious-secrets
+                  key: admin-password
+            - name: ADMIN_EMAILS
+              valueFrom:
+                configMapKeyRef:
+                  name: mealicious-config
+                  key: admin-emails
+            - name: NEXTAUTH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: mealicious-config
+                  key: nextauth-url
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mealicious-secrets
+                  key: nextauth-secret
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mealicious-secrets
+                  key: google-client-secret
+            - name: CASHFREE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: mealicious-config
+                  key: cashfree-env
+            - name: CASHFREE_APP_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: mealicious-config
+                  key: cashfree-app-id
+            - name: CASHFREE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mealicious-secrets
+                  key: cashfree-secret-key
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mealicious
+  namespace: mealicious
+  labels:
+    app: mealicious
+spec:
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30080
+      name: http
+  selector:
+    app: mealicious

@@ -56,3 +56,6 @@ server.log
 # Legacy sqlite (now Postgres)
 db/
 prisma/db/
+
+# Local schema override
+prisma/schema.local.prisma
