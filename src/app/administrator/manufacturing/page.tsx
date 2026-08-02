@@ -15,7 +15,7 @@ async function getData() {
 }
 
 export default async function ManufacturingPage() {
-  await requireErpPageUser()
+  const user = await requireErpPageUser()
   const { productionOrders } = await getData()
-  return <ManufacturingClient productionOrders={productionOrders} />
+  return <ManufacturingClient productionOrders={productionOrders} canExport={user.role === 'SUPER_ADMIN'} />
 }

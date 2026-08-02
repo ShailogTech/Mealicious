@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { error } = await requireErpRole(req, 'employees')
+  const { error, user } = await requireErpRole(req, 'employees')
   if (error) return error
   const { id } = await params
   const body = await req.json()
@@ -29,7 +29,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   ;['dob', 'joinedAt', 'internshipStart', 'internshipEnd'].forEach(date)
   if (body.salary != null) data.salary = Number(body.salary) || 0
   if (body.monitoring != null) data.monitoring = body.monitoring
-  if (body.moduleAccess != null) data.moduleAccess = Array.isArray(body.moduleAccess) ? body.moduleAccess : []
+  if (body.moduleAccess != null) {
+    // Only Super Admin can manage module-access overrides.
+    if (user!.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Only Super Admin can manage module access' }, { status: 403 })
+    }
+    data.moduleAccess = Array.isArray(body.moduleAccess) ? body.moduleAccess : []
+  }
 
   // Discipline flow: when status moves to Suspended, also deactivate the
   // linked AdminUser login (so the employee can't sign in).

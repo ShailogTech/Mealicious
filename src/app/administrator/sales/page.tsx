@@ -15,7 +15,7 @@ async function getData() {
 }
 
 export default async function SalesPage() {
-  await requireErpPageUser()
+  const user = await requireErpPageUser()
   const { sales } = await getData()
-  return <SalesClient sales={sales} />
+  return <SalesClient sales={sales} canExport={user.role === 'SUPER_ADMIN'} />
 }

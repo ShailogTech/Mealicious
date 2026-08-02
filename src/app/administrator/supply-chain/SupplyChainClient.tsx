@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Shipment extends ErpRow {
@@ -31,7 +32,7 @@ const FIELDS: ErpField[] = [
   { key: 'eta', label: 'ETA', type: 'date' },
 ]
 
-export function SupplyChainClient({ shipments }: { shipments: Shipment[] }) {
+export function SupplyChainClient({ shipments, canExport }: { shipments: Shipment[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Shipment[]>(shipments)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Shipment | null>(null)
@@ -75,7 +76,7 @@ export function SupplyChainClient({ shipments }: { shipments: Shipment[] }) {
 
   return (
     <div>
-      <ErpPageHeader title="Supply Chain" description="Shipments between facilities." />
+      <ErpPageHeader title="Supply Chain" description="Shipments between facilities." action={<ErpExportButtons model="supplychain" canExport={!!canExport} />} />
       <ErpDataTable columns={COLUMNS} rows={rows} onAdd={openCreate} onEdit={openEdit} onDelete={handleDelete} addLabel="Add Shipment" emptyMessage="No shipments yet." />
       <ErpFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editing ? 'Edit Shipment' : 'Add Shipment'} fields={FIELDS} initial={editing} onSubmit={handleSubmit} />
     </div>

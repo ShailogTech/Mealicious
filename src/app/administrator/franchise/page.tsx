@@ -10,7 +10,7 @@ async function getData() {
 }
 
 export default async function FranchisePage() {
-  await requireErpPageUser()
+  const user = await requireErpPageUser()
   const { franchise } = await getData()
-  return <FranchiseClient franchise={franchise} />
+  return <FranchiseClient franchise={franchise} canExport={user.role === 'SUPER_ADMIN'} />
 }

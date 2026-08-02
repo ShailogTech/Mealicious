@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Transaction extends ErpRow {
@@ -37,7 +38,7 @@ const FIELDS: ErpField[] = [
   { key: 'note', label: 'Note', type: 'textarea' },
 ]
 
-export function FinanceClient({ transactions }: { transactions: Transaction[] }) {
+export function FinanceClient({ transactions, canExport }: { transactions: Transaction[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Transaction[]>(transactions)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
@@ -81,7 +82,7 @@ export function FinanceClient({ transactions }: { transactions: Transaction[] })
 
   return (
     <div>
-      <ErpPageHeader title="Finance" description="Income and expense transactions." />
+      <ErpPageHeader title="Finance" description="Income and expense transactions." action={<ErpExportButtons model="finance" canExport={!!canExport} />} />
       <ErpDataTable
         columns={COLUMNS}
         rows={rows}

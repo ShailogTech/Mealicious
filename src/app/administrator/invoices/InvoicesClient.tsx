@@ -7,6 +7,7 @@ import { Download, FileText, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpRow } from '@/components/administrator/erp-crud-types'
 import { downloadInvoicePdf, type PdfInvoice, type PdfCompany } from '@/lib/administrator/invoice-pdf'
 import { buildInvoiceWaLink, openInvoiceWaLink } from '@/lib/administrator/whatsapp-share'
@@ -30,7 +31,7 @@ const COLUMNS: ErpColumn[] = [
   { key: 'paymentMode', label: 'Payment', type: 'badge' },
 ]
 
-export function InvoicesClient({ invoices }: { invoices: Invoice[] }) {
+export function InvoicesClient({ invoices, canExport }: { invoices: Invoice[]; canExport?: boolean }) {
   const [rows] = useState<Invoice[]>(invoices)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
@@ -76,9 +77,12 @@ export function InvoicesClient({ invoices }: { invoices: Invoice[] }) {
         title="Invoices"
         description="Tax invoices issued. Download the official letterhead PDF."
         action={
-          <Button asChild>
-            <Link href="/administrator/billing"><FileText className="h-4 w-4" /> New Invoice</Link>
-          </Button>
+          <>
+            <ErpExportButtons model="invoices" canExport={!!canExport} />
+            <Button asChild>
+              <Link href="/administrator/billing"><FileText className="h-4 w-4" /> New Invoice</Link>
+            </Button>
+          </>
         }
       />
       <ErpDataTable

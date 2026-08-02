@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface InventoryItem extends ErpRow {
@@ -40,7 +41,7 @@ const FIELDS: ErpField[] = [
   { key: 'gstPct', label: 'GST %', type: 'number' },
 ]
 
-export function InventoryClient({ items }: { items: InventoryItem[] }) {
+export function InventoryClient({ items, canExport }: { items: InventoryItem[]; canExport?: boolean }) {
   const [rows, setRows] = useState<InventoryItem[]>(items)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<InventoryItem | null>(null)
@@ -82,7 +83,7 @@ export function InventoryClient({ items }: { items: InventoryItem[] }) {
 
   return (
     <div>
-      <ErpPageHeader title="Inventory" description="Stock-keeping units, stock levels, and reorder points." />
+      <ErpPageHeader title="Inventory" description="Stock-keeping units, stock levels, and reorder points." action={<ErpExportButtons model="inventory" canExport={!!canExport} />} />
       <ErpDataTable
         columns={COLUMNS}
         rows={rows}

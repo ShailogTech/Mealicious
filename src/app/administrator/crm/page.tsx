@@ -10,7 +10,7 @@ async function getData() {
 }
 
 export default async function CrmPage() {
-  await requireErpPageUser()
+  const user = await requireErpPageUser()
   const { leads } = await getData()
-  return <CrmClient leads={leads} />
+  return <CrmClient leads={leads} canExport={user.role === 'SUPER_ADMIN'} />
 }

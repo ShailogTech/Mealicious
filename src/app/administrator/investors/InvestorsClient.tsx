@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Investor extends ErpRow {
@@ -25,7 +26,7 @@ const FIELDS: ErpField[] = [
   { key: 'lastUpdate', label: 'Last Update', type: 'date' },
 ]
 
-export function InvestorsClient({ investors }: { investors: Investor[] }) {
+export function InvestorsClient({ investors, canExport }: { investors: Investor[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Investor[]>(investors)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Investor | null>(null)
@@ -71,7 +72,7 @@ export function InvestorsClient({ investors }: { investors: Investor[] }) {
 
   return (
     <div>
-      <ErpPageHeader title="Investors" description="Stakeholders with investment and stake tracking." />
+      <ErpPageHeader title="Investors" description="Stakeholders with investment and stake tracking." action={<ErpExportButtons model="investors" canExport={!!canExport} />} />
       <ErpDataTable columns={COLUMNS} rows={rows} onAdd={openCreate} onEdit={openEdit} onDelete={handleDelete} addLabel="Add Investor" emptyMessage="No investors recorded yet." />
       <ErpFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editing ? 'Edit Investor' : 'Add Investor'} fields={FIELDS} initial={editing} onSubmit={handleSubmit} />
     </div>

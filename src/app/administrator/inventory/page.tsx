@@ -22,7 +22,7 @@ async function getData() {
 }
 
 export default async function InventoryPage() {
-  await requireErpPageUser()
+  const user = await requireErpPageUser()
   const { items } = await getData()
-  return <InventoryClient items={items} />
+  return <InventoryClient items={items} canExport={user.role === 'SUPER_ADMIN'} />
 }

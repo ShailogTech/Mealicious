@@ -3,8 +3,8 @@ import { db } from '@/lib/db'
 import { getErpSessionUser } from '@/lib/erp-session'
 
 /**
- * Generic CSV export. Super-admin only (bulk data extract).
- * GET /api/administrator/export/<model> returns a CSV of all rows.
+ * Generic export. Super-admin only (bulk data extract).
+ * GET /api/administrator/export/<model>?format=csv|xlsx|pdf
  */
 const ALLOWED = [
   'employees', 'invoices', 'inventory', 'finance',
@@ -57,7 +57,65 @@ function toCsv(rows: Record<string, unknown>[]): string {
   return lines.join('\n')
 }
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ model: string }> }) {
+async function toXlsx(rows: Record<string, unknown>[], model: string): Promise<Buffer> {
+  const ExcelJS = await import('exceljs')
+  const wb = new ExcelJS.Workbook()
+  const ws = wb.addWorksheet(model)
+  if (rows.length === 0) {
+    ws.addRow(['No data'])
+    const buf = await wb.xlsx.writeBuffer()
+    return Buffer.from(buf)
+  }
+  const headers = Object.keys(rows[0])
+  ws.addRow(headers)
+  for (const row of rows) ws.addRow(headers.map((h) => row[h] ?? ''))
+  // Style header row
+  const headerRow = ws.getRow(1)
+  headerRow.font = { bold: true }
+  headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B4332' } }
+  headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+  ws.columns.forEach((col) => { col.width = 18 })
+  const buf = await wb.xlsx.writeBuffer()
+  return Buffer.from(buf)
+}
+
+async function toPdf(rows: Record<string, unknown>[], model: string): Promise<Buffer> {
+  const { jsPDF } = await import('jspdf')
+  await import('jspdf-autotable')
+  const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' })
+  doc.setFontSize(14)
+  doc.text(`Mealicious ERP — ${model} export`, 40, 30)
+  doc.setFontSize(9)
+  doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 40, 46)
+
+  if (rows.length === 0) {
+    doc.text('No data to export.', 40, 70)
+    return Buffer.from(doc.output('arraybuffer'))
+  }
+
+  const headers = Object.keys(rows[0])
+  const body = rows.map((row) => headers.map((h) => {
+    const v = row[h]
+    if (v == null) return ''
+    if (v instanceof Date) return v.toISOString().slice(0, 10)
+    return String(v)
+  }))
+
+  // jspdf-autotable v5 attaches via module augmentation
+  const autoTable = (doc as unknown as { autoTable: (opts: Record<string, unknown>) => void }).autoTable
+  autoTable({
+    startY: 60,
+    head: [headers],
+    body,
+    styles: { fontSize: 7, cellPadding: 3 },
+    headStyles: { fillColor: [27, 67, 50], textColor: 255, fontSize: 8 },
+    margin: { left: 40, right: 40 },
+  })
+
+  return Buffer.from(doc.output('arraybuffer'))
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ model: string }> }) {
   const user = await getErpSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (user.role !== 'SUPER_ADMIN') return NextResponse.json({ error: 'Forbidden — export is Super Admin only' }, { status: 403 })
@@ -66,7 +124,33 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ mod
   if (!ALLOWED.includes(model as ModelKey)) {
     return NextResponse.json({ error: 'Unknown model for export' }, { status: 400 })
   }
+
+  const format = (req.nextUrl.searchParams.get('format') || 'csv').toLowerCase()
   const rows = await fetchRows(model as ModelKey)
+
+  if (format === 'xlsx') {
+    const buf = await toXlsx(rows, model)
+    return new NextResponse(new Uint8Array(buf), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="${model}.xlsx"`,
+      },
+    })
+  }
+
+  if (format === 'pdf') {
+    const buf = await toPdf(rows, model)
+    return new NextResponse(new Uint8Array(buf), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${model}.pdf"`,
+      },
+    })
+  }
+
+  // Default: CSV
   const csv = toCsv(rows)
   return new NextResponse(csv, {
     status: 200,

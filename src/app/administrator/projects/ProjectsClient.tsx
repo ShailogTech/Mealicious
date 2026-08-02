@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
@@ -37,7 +38,7 @@ const COLUMN_ACCENT: Record<string, string> = {
   Done: 'border-t-emerald-500',
 }
 
-export function ProjectsClient({ projects }: { projects: Project[] }) {
+export function ProjectsClient({ projects, canExport }: { projects: Project[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Project[]>(projects)
   const [createOpen, setCreateOpen] = useState(false)
   const [newName, setNewName] = useState('')
@@ -94,7 +95,12 @@ export function ProjectsClient({ projects }: { projects: Project[] }) {
       <ErpPageHeader
         title="Projects"
         description="Kanban board across the project lifecycle."
-        action={<Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> New Project</Button>}
+        action={
+          <>
+            <ErpExportButtons model="projects" canExport={!!canExport} />
+            <Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> New Project</Button>
+          </>
+        }
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">

@@ -15,7 +15,7 @@ async function getData() {
 }
 
 export default async function SupplyChainPage() {
-  await requireErpPageUser()
+  const user = await requireErpPageUser()
   const { shipments } = await getData()
-  return <SupplyChainClient shipments={shipments} />
+  return <SupplyChainClient shipments={shipments} canExport={user.role === 'SUPER_ADMIN'} />
 }

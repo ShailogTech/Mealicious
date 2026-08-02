@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Distributor extends ErpRow {
@@ -30,7 +31,7 @@ const FIELDS: ErpField[] = [
   { key: 'status', label: 'Status', type: 'select', options: STATUSES },
 ]
 
-export function DistributorsClient({ distributors }: { distributors: Distributor[] }) {
+export function DistributorsClient({ distributors, canExport }: { distributors: Distributor[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Distributor[]>(distributors)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Distributor | null>(null)
@@ -64,7 +65,7 @@ export function DistributorsClient({ distributors }: { distributors: Distributor
 
   return (
     <div>
-      <ErpPageHeader title="Distributor Portal" description="Distribution partners with territory and targets." />
+      <ErpPageHeader title="Distributor Portal" description="Distribution partners with territory and targets." action={<ErpExportButtons model="distributors" canExport={!!canExport} />} />
       <ErpDataTable columns={COLUMNS} rows={rows} onAdd={openCreate} onEdit={openEdit} onDelete={handleDelete} addLabel="Add Distributor" emptyMessage="No distributors yet." />
       <ErpFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editing ? 'Edit Distributor' : 'Add Distributor'} fields={FIELDS} initial={editing} onSubmit={handleSubmit} />
     </div>

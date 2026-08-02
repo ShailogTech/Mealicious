@@ -33,5 +33,5 @@ async function getData() {
 export default async function EmployeesPage() {
   const user = await requireErpPageUser()
   const { employees } = await getData()
-  return <EmployeesClient employees={employees} canExport={user.role === 'SUPER_ADMIN'} />
+  return <EmployeesClient employees={employees} canExport={user.role === 'SUPER_ADMIN'} canManageAccess={user.role === 'SUPER_ADMIN'} />
 }

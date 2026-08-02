@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Franchise extends ErpRow { id: string; name: string; city: string; owner: string; royaltyDue: number; status: string }
@@ -28,7 +29,7 @@ const FIELDS: ErpField[] = [
   { key: 'status', label: 'Status', type: 'select', options: STATUSES },
 ]
 
-export function FranchiseClient({ franchise }: { franchise: Franchise[] }) {
+export function FranchiseClient({ franchise, canExport }: { franchise: Franchise[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Franchise[]>(franchise)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Franchise | null>(null)
@@ -62,7 +63,7 @@ export function FranchiseClient({ franchise }: { franchise: Franchise[] }) {
 
   return (
     <div>
-      <ErpPageHeader title="Franchise" description="Franchise stores with royalty tracking." />
+      <ErpPageHeader title="Franchise" description="Franchise stores with royalty tracking." action={<ErpExportButtons model="franchise" canExport={!!canExport} />} />
       <ErpDataTable columns={COLUMNS} rows={rows} onAdd={openCreate} onEdit={openEdit} onDelete={handleDelete} addLabel="Add Store" emptyMessage="No franchise stores yet." />
       <ErpFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editing ? 'Edit Store' : 'Add Store'} fields={FIELDS} initial={editing} onSubmit={handleSubmit} />
     </div>

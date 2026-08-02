@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Vendor extends ErpRow {
@@ -33,7 +34,7 @@ const FIELDS: ErpField[] = [
   { key: 'outstanding', label: 'Outstanding Amount (₹)', type: 'number' },
 ]
 
-export function VendorsClient({ vendors }: { vendors: Vendor[] }) {
+export function VendorsClient({ vendors, canExport }: { vendors: Vendor[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Vendor[]>(vendors)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Vendor | null>(null)
@@ -67,7 +68,7 @@ export function VendorsClient({ vendors }: { vendors: Vendor[] }) {
 
   return (
     <div>
-      <ErpPageHeader title="Vendor Portal" description="Suppliers with outstanding balances and status." />
+      <ErpPageHeader title="Vendor Portal" description="Suppliers with outstanding balances and status." action={<ErpExportButtons model="vendors" canExport={!!canExport} />} />
       <ErpDataTable columns={COLUMNS} rows={rows} onAdd={openCreate} onEdit={openEdit} onDelete={handleDelete} addLabel="Add Vendor" emptyMessage="No vendors yet." />
       <ErpFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editing ? 'Edit Vendor' : 'Add Vendor'} fields={FIELDS} initial={editing} onSubmit={handleSubmit} />
     </div>
