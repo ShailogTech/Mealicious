@@ -36,6 +36,12 @@ metadata:
     app: mealicious-db
 spec:
   replicas: 1
+  # Recreate, not RollingUpdate: the PVC is ReadWriteOnce and both pods land on
+  # the same node, so a rolling update runs two postgres instances against one
+  # data directory. The old pod's shutdown removes postmaster.pid and the new
+  # instance aborts with "data directory lock file is invalid".
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mealicious-db
@@ -87,6 +93,8 @@ spec:
                 - mealicious
             initialDelaySeconds: 15
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
           readinessProbe:
             exec:
               command:
@@ -97,6 +105,21 @@ spec:
                 - mealicious
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 6
+          # Gives a cold PVC time to run initdb without the liveness probe
+          # killing the container mid-initialisation.
+          startupProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - mealicious
+                - -d
+                - mealicious
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 30
       volumes:
         - name: postgres-data
           persistentVolumeClaim:

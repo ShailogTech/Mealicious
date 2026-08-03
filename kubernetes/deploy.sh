@@ -28,9 +28,10 @@ if minikube status | grep -q "Running"; then
 else
     echo "  Starting Minikube..."
     minikube start --driver=docker
-    minikube addons enable ingress
-    echo "  Minikube started with ingress addon."
+    echo "  Minikube started."
 fi
+# Ensure the ingress controller exists even if minikube was already running
+minikube addons enable ingress >/dev/null
 
 # 3. Point Docker to minikube's daemon
 echo -e "\n[3/7] Configuring Docker for Minikube..."
@@ -52,10 +53,21 @@ kubectl apply -f "$SCRIPT_DIR/app.yaml"
 kubectl apply -f "$SCRIPT_DIR/ingress.yaml"
 echo "  All manifests applied."
 
+# The image tag is always "mealicious:local", so the Deployment spec does not
+# change between builds and Kubernetes has no reason to restart the pod. Force
+# a rollout, otherwise the freshly built image is never actually deployed.
+echo "  Rolling out freshly built image..."
+kubectl rollout restart deployment/mealicious -n mealicious
+kubectl rollout status deployment/mealicious -n mealicious --timeout=300s
+
 # 6. Wait for pods to be ready
 echo -e "\n[6/7] Waiting for pods to be ready..."
-kubectl wait --namespace mealicious --for=condition=ready pod --selector=app=mealicious-db --timeout=120s
-kubectl wait --namespace mealicious --for=condition=ready pod --selector=app=mealicious --timeout=120s
+kubectl wait --namespace mealicious --for=condition=ready pod --selector=app=mealicious-db --timeout=180s
+if ! kubectl wait --namespace mealicious --for=condition=ready pod --selector=app=mealicious --timeout=300s; then
+    echo "  Pods did not all become ready. Recent state:"
+    kubectl get pods -n mealicious
+    exit 1
+fi
 echo "  All pods are ready!"
 
 # 7. Show status
