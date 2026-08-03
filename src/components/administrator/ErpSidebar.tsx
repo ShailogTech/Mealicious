@@ -7,7 +7,7 @@ import {
   Clock, Activity, UsersRound, UserCircle, MessageCircle, Mail,
   Handshake, ShoppingCart, Package, Store, Factory, Truck, KanbanSquare,
   ChartColumn, Building2, ShoppingBag, Banknote, Megaphone, Wrench,
-  FolderOpen,
+  FolderOpen, Receipt, Mailbox, Landmark,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -47,6 +47,10 @@ const MODULE_ICONS: Record<string, LucideIcon> = {
   megaphone: Megaphone,
   wrench: Wrench,
   folder: FolderOpen,
+  wholesale: Receipt,
+  emailmanagement: Mailbox,
+  expenses: Wallet,
+  bankaccounts: Landmark,
 }
 
 function resolveModuleIcon(key: string): LucideIcon {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { priceCartFromDb, computeTotals, type PricingItemInput } from '@/lib/pricing'
 import { notifyOrderConfirmed } from '@/lib/whatsapp'
+import { sendEmail, orderConfirmationHtml } from '@/lib/email'
 
 const ALLOWED_AMOUNT_DRIFT = 1
 
@@ -148,6 +149,15 @@ export async function POST(req: NextRequest) {
         items: itemsSummary,
         total: order.total,
         paymentMethod: order.paymentMethod || 'COD',
+      }).catch(() => {})
+    }
+
+    // Order confirmation email (#14) — fire-and-forget.
+    if (customerEmail) {
+      sendEmail({
+        to: customerEmail,
+        subject: `Order Confirmed — ${order.orderNumber}`,
+        html: orderConfirmationHtml(order.orderNumber, user.name, order.total, order.items.map(i => ({ name: i.name, qty: i.quantity, price: i.price }))),
       }).catch(() => {})
     }
 

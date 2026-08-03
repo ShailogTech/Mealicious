@@ -31,10 +31,21 @@ export async function GET(req: NextRequest) {
     db.category.findMany({ orderBy: { sortOrder: 'asc' } }),
   ])
 
+  // #4: ERP Inventory as primary source. For products linked to an ERP
+  // inventory item, override the stock from the ERP side (live sync).
+  const linkedIds = rows.filter((p) => p.erpInventoryItemId).map((p) => p.erpInventoryItemId!) as string[]
+  const erpItems = linkedIds.length > 0
+    ? new Map((await db.erpInventoryItem.findMany({ where: { id: { in: linkedIds } }, select: { id: true, stock: true } })).map((i) => [i.id, i.stock]))
+    : new Map<string, number>()
+
   const products = rows.map((p) => ({
     ...serializeProduct(p as unknown as Record<string, unknown>),
     category: p.category?.name,
     categorySlug: p.category?.slug,
+    // Override stock from ERP if linked.
+    ...(p.erpInventoryItemId && erpItems.has(p.erpInventoryItemId)
+      ? { stock: erpItems.get(p.erpInventoryItemId)! }
+      : {}),
   }))
 
   return NextResponse.json({

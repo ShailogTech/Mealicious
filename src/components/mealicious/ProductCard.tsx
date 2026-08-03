@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Star, Heart, ShoppingCart, PackageSearch } from 'lucide-react'
+import { Star, Heart, ShoppingCart, PackageSearch, Eye, Trash2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/lib/store'
+import { useCatalogStore } from '@/lib/catalog-store'
+import { adminFetch } from '@/lib/admin-fetch'
 import type { Product } from '@/lib/data'
 
 interface ProductCardProps {
@@ -18,8 +20,14 @@ export default function ProductCard({ product }: ProductCardProps) {
   const addToCart = useAppStore((s) => s.addToCart)
   const toggleWishlist = useAppStore((s) => s.toggleWishlist)
   const isInWishlist = useAppStore((s) => s.isInWishlist)
+  const user = useAppStore((s) => s.user)
+  const deleteProduct = useCatalogStore((s) => s.deleteProduct)
+  const loadPublicProducts = useCatalogStore((s) => s.loadPublicProducts)
+
+  const isAdmin = user?.role === 'admin'
 
   const [imgError, setImgError] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const wishlisted = isInWishlist(product.id)
 
   // Calculate pricing based on first variant if it contains weight values with prices
@@ -72,6 +80,34 @@ export default function ProductCard({ product }: ProductCardProps) {
     toggleWishlist(product.id)
   }
 
+  function handleOpenProduct(e: React.MouseEvent) {
+    e.stopPropagation()
+    navigate('product', { id: product.id })
+  }
+
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!confirm(`Delete product "${product.name}"? This cannot be undone.`)) return
+    setDeleting(true)
+    try {
+      // deleteProduct handles auth + reloads the catalog. Fall back to a raw
+      // admin DELETE + public refresh if the store action is unavailable.
+      if (typeof deleteProduct === 'function') {
+        await deleteProduct(product.id)
+      } else {
+        await adminFetch(`/api/admin/products/${product.id}`, { method: 'DELETE' })
+      }
+      if (typeof loadPublicProducts === 'function') {
+        await loadPublicProducts()
+      }
+    } catch (err) {
+      console.error('Failed to delete product:', err)
+      alert('Failed to delete product. Make sure you are logged in as admin.')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <Card
       className="group cursor-pointer overflow-hidden py-0 gap-0 border-border/50 hover:shadow-lg transition-all duration-300"
@@ -122,6 +158,33 @@ export default function ProductCard({ product }: ProductCardProps) {
             }`}
           />
         </Button>
+
+        {/* Open product page (eye) */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-11 right-2 h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm"
+          onClick={handleOpenProduct}
+          aria-label="Open product page"
+          title="Open product page"
+        >
+          <Eye className="h-4 w-4 text-gray-700" />
+        </Button>
+
+        {/* Admin-only delete */}
+        {isAdmin && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute bottom-2 left-2 h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm hover:bg-red-50 shadow-sm"
+            onClick={handleDelete}
+            disabled={deleting}
+            aria-label="Delete product"
+            title="Delete product"
+          >
+            <Trash2 className={`h-4 w-4 text-red-600 ${deleting ? 'animate-pulse' : ''}`} />
+          </Button>
+        )}
       </div>
 
       <CardContent className="p-3 sm:p-4 space-y-2">

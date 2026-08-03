@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/auth-server'
 import { notifyOrderShipped, notifyOrderDelivered, notifyOrderCancelled } from '@/lib/whatsapp'
 import { completeReferralReward } from '@/lib/referral-reward'
+import { sendEmail, trackingNotificationHtml } from '@/lib/email'
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireAdmin(req)
@@ -90,6 +91,38 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   // Credit referrer once a COD order is genuinely delivered (prepaid credited at payment)
   if (existing && body.status && String(body.status).toLowerCase() === 'delivered' && existing.status !== 'delivered') {
     completeReferralReward(existing.userId).catch(() => {})
+  }
+
+  // #15: When tracking ID is entered/updated, notify the customer via Email + WhatsApp
+  // (separate from the status-change block above — fires even without a status change).
+  if (body.trackingId && body.trackingId !== (existing.trackingId || '')) {
+    let addr: Record<string, string> = {}
+    try { addr = JSON.parse(existing.shippingAddr) } catch {}
+    const phone = existing.user?.phone || addr.phone
+    const name = existing.user?.name || addr.fullName || 'Customer'
+    const email = existing.user?.email
+    const trackingId = String(body.trackingId)
+    const trackingUrl = String(body.trackingUrl || '')
+    const courierName = String(body.shippingProvider || existing.shippingProvider || 'Courier')
+
+    // WhatsApp notification
+    if (phone) {
+      notifyOrderShipped(phone, {
+        customerName: name,
+        orderNumber: existing.orderNumber,
+        courierName,
+        awb: trackingId,
+        trackingUrl: trackingUrl || 'https://mealicious.store',
+      }).catch(() => {})
+    }
+    // Email notification
+    if (email) {
+      sendEmail({
+        to: email,
+        subject: `Your order has been shipped — ${existing.orderNumber}`,
+        html: trackingNotificationHtml(existing.orderNumber, name, trackingId, trackingUrl, courierName),
+      }).catch(() => {})
+    }
   }
 
   return NextResponse.json({ order: updated })

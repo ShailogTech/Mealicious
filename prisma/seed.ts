@@ -63,13 +63,15 @@ function buildErpPermissions() {
     'supplychain', 'projects', 'finance', 'analytics', 'reports', 'adminusers',
     'assets', 'franchise', 'distributors', 'retail', 'investors', 'campaigns',
     'documents',
+    'wholesale', 'expenses', 'bankaccounts', 'emailmanagement',
+    'marketing', 'financedept',
   ]
   const matrix: Record<string, Record<string, boolean>> = {}
   for (const key of modules) {
     matrix[key] = {
       SUPER_ADMIN: true,
-      FINANCE: ['dashboard', 'finance', 'invoices', 'billing', 'purchase', 'reports', 'messages', 'mailtickets'].includes(key),
-      SALES: ['dashboard', 'crm', 'sales', 'billing', 'invoices', 'customers', 'marketing', 'reports', 'messages', 'mailtickets'].includes(key),
+      FINANCE: ['dashboard', 'finance', 'expenses', 'invoices', 'billing', 'wholesale', 'purchase', 'reports', 'messages', 'mailtickets'].includes(key),
+      SALES: ['dashboard', 'crm', 'sales', 'billing', 'wholesale', 'invoices', 'customers', 'marketing', 'reports', 'messages', 'mailtickets'].includes(key),
       OPS: ['dashboard', 'inventory', 'manufacturing', 'supplychain', 'assets', 'reports', 'messages', 'mailtickets'].includes(key),
       HR: ['dashboard', 'employees', 'shifts', 'productivity', 'teams', 'groups', 'reports', 'messages', 'mailtickets'].includes(key),
       EMPLOYEE: ['dashboard', 'projects', 'messages', 'mailtickets'].includes(key),
@@ -79,6 +81,7 @@ function buildErpPermissions() {
   // Hard-locked super-admin-only modules — stripped from the togglable matrix.
   delete matrix['adminusers']
   delete matrix['companysettings']
+  delete matrix['bankaccounts']
   return matrix
 }
 
@@ -210,6 +213,24 @@ async function seedErp() {
         role: 'SUPER_ADMIN',
         isActive: true,
         linkedEmployee: emp ? { connect: { id: emp.id } } : undefined,
+      },
+    })
+  }
+
+  console.log('Seeding company email accounts…')
+  const companyEmails = [
+    { email: 'support@mealicious.store', department: 'Support' },
+    { email: 'contact@mealicious.store', department: 'General' },
+    { email: 'feedback@mealicious.store', department: 'Feedback' },
+  ]
+  for (const ce of companyEmails) {
+    await prisma.erpCompanyEmail.upsert({
+      where: { email: ce.email },
+      update: { department: ce.department },
+      create: {
+        email: ce.email,
+        department: ce.department,
+        isActive: true,
       },
     })
   }

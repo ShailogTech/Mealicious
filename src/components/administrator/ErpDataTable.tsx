@@ -17,6 +17,8 @@ interface ErpDataTableProps {
   onDelete?: (row: ErpRow) => void
   /** Extra per-row action buttons (rendered by parent). */
   renderRowActions?: (row: ErpRow) => React.ReactNode
+  /** Per-column custom cell renderer (overrides the default cell). */
+  renderCell?: (column: ErpColumn, row: ErpRow) => React.ReactNode
   addLabel?: string
   emptyMessage?: string
 }
@@ -35,7 +37,7 @@ function Cell({ column, row }: { column: ErpColumn; row: ErpRow }) {
 }
 
 export function ErpDataTable({
-  columns, rows, onAdd, onEdit, onDelete, renderRowActions, addLabel = 'Add', emptyMessage = 'No records yet.',
+  columns, rows, onAdd, onEdit, onDelete, renderRowActions, renderCell, addLabel = 'Add', emptyMessage = 'No records yet.',
 }: ErpDataTableProps) {
   return (
     <div className="rounded-lg border border-stone-200 bg-white">
@@ -69,7 +71,7 @@ export function ErpDataTable({
                 <TableRow key={(row.id as string) || idx}>
                   {columns.map((c) => (
                     <TableCell key={c.key} className="text-sm">
-                      <Cell column={c} row={row} />
+                      {renderCell ? (renderCell(c, row) ?? <Cell column={c} row={row} />) : <Cell column={c} row={row} />}
                     </TableCell>
                   ))}
                   {(onEdit || onDelete || renderRowActions) && (

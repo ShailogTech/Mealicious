@@ -12,6 +12,7 @@ const ALLOWED = [
   'manufacturing', 'supplychain', 'projects',
   'franchise', 'distributors', 'retail', 'investors', 'campaigns', 'assets',
   'shifts', 'teams', 'groups',
+  'expenses',
 ] as const
 
 type ModelKey = typeof ALLOWED[number]
@@ -42,6 +43,7 @@ async function fetchRows(model: ModelKey): Promise<Record<string, unknown>[]> {
     case 'shifts': return await db.erpShift.findMany() as unknown as Record<string, unknown>[]
     case 'teams': return await db.erpTeam.findMany() as unknown as Record<string, unknown>[]
     case 'groups': return await db.erpGroup.findMany() as unknown as Record<string, unknown>[]
+    case 'expenses': return await db.erpExpense.findMany({ orderBy: { date: 'desc' } }) as unknown as Record<string, unknown>[]
   }
 }
 

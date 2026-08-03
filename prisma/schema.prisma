@@ -756,6 +756,20 @@ model ErpAsset {
   @@index([status])
 }
 
+// Company email accounts (support@, contact@, feedback@mealicious.store, …)
+// managed via /administrator/email-management. Only SUPER_ADMIN can create /
+// assign / revoke; other ERP roles can view.
+model ErpCompanyEmail {
+  id          String   @id @default(cuid())
+  email       String   @unique // support@mealicious.store, contact@, feedback@
+  department  String   // Support|Sales|General|Feedback
+  assignedTo  String?  // employee name who has access
+  isActive    Boolean  @default(true)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 // ============================================================================
 // Storefront discounts (replaces hardcoded COUPON_CODES + prepaid logic).
 // Admin-managed via /admin/discounts. Types:
@@ -792,4 +806,182 @@ model ErpDepartmentDocument {
   createdAt  DateTime @default(now())
 
   @@index([dept])
+}
+
+// ============================================================================
+// Phase 6-7: Marketing & Finance Departments
+// ============================================================================
+
+// Marketing — Customer Segments for targeted campaigns
+model ErpCustomerSegment {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  criteria    Json     @default("{}") // {minOrders, minLTV, city, segment}
+  customerCount Int    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Marketing — Social Media Campaign tracker
+model ErpSocialCampaign {
+  id          String   @id @default(cuid())
+  name        String
+  platform    String   // Instagram|Facebook|Google Ads|YouTube|Twitter
+  status      String   @default("Planned") // Planned|Live|Completed|Paused
+  budget      Float    @default(0)
+  spent       Float    @default(0)
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([platform])
+  @@index([status])
+}
+
+// Marketing — Loyalty & Referral Program
+model ErpLoyaltyMember {
+  id            String   @id @default(cuid())
+  customerName  String
+  customerPhone String?
+  customerEmail String?
+  points        Int      @default(0)
+  tier          String   @default("Silver") // Bronze|Silver|Gold|Platinum
+  totalSpent    Float    @default(0)
+  referrals     Int      @default(0)
+  joinedAt      DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tier])
+}
+
+// Marketing — Product Launch tracker
+model ErpProductLaunch {
+  id          String   @id @default(cuid())
+  productName String
+  launchDate  DateTime?
+  status      String   @default("Planning") // Planning|In Production|Launched|Delayed
+  budget      Float    @default(0)
+  targetMarket String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+}
+
+// Finance — Journal Entries (General Ledger)
+model ErpJournalEntry {
+  id          String   @id @default(cuid())
+  entryDate   DateTime @default(now())
+  voucherNo   String   @unique
+  description String
+  debitAccount String
+  creditAccount String
+  amount      Float
+  reference   String?
+  createdBy   String?
+  createdAt   DateTime @default(now())
+
+  @@index([entryDate])
+  @@index([debitAccount])
+}
+
+// Finance — Accounts Payable / Receivable
+model ErpAccountEntry {
+  id          String   @id @default(cuid())
+  type        String   // Payable | Receivable
+  partyName   String   // vendor or customer
+  invoiceRef  String?
+  amount      Float
+  paidAmount  Float    @default(0)
+  balance     Float    @default(0)
+  dueDate     DateTime?
+  status      String   @default("Open") // Open|Partially Paid|Settled|Overdue
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+}
+
+// Finance — Budget tracker
+model ErpBudget {
+  id          String   @id @default(cuid())
+  department  String
+  category    String
+  allocated   Float    @default(0)
+  spent       Float    @default(0)
+  financialYear String  @default("2026-27")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([department])
+  @@index([financialYear])
+}
+
+// Finance — Fixed Asset register
+model ErpFixedAsset {
+  id              String    @id @default(cuid())
+  name            String
+  category        String    // Machinery|Vehicle|IT Equipment|Furniture|Building
+  purchaseDate    DateTime?
+  purchaseValue   Float     @default(0)
+  currentValue    Float     @default(0)
+  depreciationRate Float    @default(10) // % per year
+  location        String?
+  status          String    @default("Active") // Active|Sold|Scrapped|Under Maintenance
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([category])
+  @@index([status])
+}
+
+// ============================================================================
+// ERP MODULES (Phase 8) — Expense Monitoring & Bank Accounts.
+// See /administrator/expenses and /administrator/bank-accounts.
+// ============================================================================
+
+// Expense Monitoring — bills/invoices with document upload. Status workflow
+// (Pending|Approved|Paid|Rejected) is driven from the Expense Monitoring module.
+model ErpExpense {
+  id           String   @id @default(cuid())
+  category     String
+  description  String
+  amount       Float
+  date         DateTime @default(now())
+  vendor       String?
+  paymentMode  String   @default("Bank Transfer") // Cash|UPI|Card|Bank Transfer|Cheque
+  status       String   @default("Pending") // Pending|Approved|Paid|Rejected
+  documentUrl  String?  // uploaded bill/invoice file path
+  documentName String?
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([category])
+  @@index([status])
+}
+
+// Bank Accounts — company bank details with primary selection and notes.
+// Super-admin only (sensitive). Account numbers are masked in the UI.
+model ErpBankAccount {
+  id            String   @id @default(cuid())
+  bankName      String
+  accountName   String
+  accountNumber String
+  ifscCode      String
+  branch        String
+  accountType   String   @default("Current") // Current|Savings|Fixed Deposit
+  upiId         String?
+  isPrimary     Boolean  @default(false)
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
