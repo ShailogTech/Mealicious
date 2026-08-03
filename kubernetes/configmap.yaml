@@ -10,5 +10,8 @@ data:
   postgres-db: "mealicious"
   cashfree-env: "sandbox"
   cashfree-app-id: "TEST11081858eb7074bf1d5c5b1b0b8e85818011"
-  nextauth-url: "http://localhost:3000"
+  # Must match the URL the browser actually uses, or NextAuth callbacks break.
+  # This is the ingress host from ingress.yaml. If you reach the app via
+  # `kubectl port-forward` instead, override this to http://localhost:3000.
+  nextauth-url: "http://mealicious.local"
   admin-emails: "admin@mealicious.com"
