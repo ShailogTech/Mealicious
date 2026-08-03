@@ -96,20 +96,32 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "500m"
+          # The entrypoint runs `prisma db push` + the full seed before starting
+          # the server, so startup regularly exceeds 60s on a loaded node. The
+          # startupProbe holds liveness/readiness off until the server actually
+          # answers; without it the liveness probe SIGKILLs the container
+          # mid-seed (exit 137) and the pod never converges.
+          startupProbe:
+            httpGet:
+              path: /
+              port: 3000
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 60
           livenessProbe:
             httpGet:
               path: /
               port: 3000
-            initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
+            failureThreshold: 6
           readinessProbe:
             httpGet:
               path: /
               port: 3000
-            initialDelaySeconds: 10
             periodSeconds: 5
-            timeoutSeconds: 3
+            timeoutSeconds: 5
+            failureThreshold: 3
 ---
 apiVersion: v1
 kind: Service
