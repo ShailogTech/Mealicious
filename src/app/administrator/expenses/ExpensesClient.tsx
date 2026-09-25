@@ -133,7 +133,7 @@ export function ExpensesClient({ expenses, canExport }: { expenses: Expense[]; c
   }
 
   async function handleDelete(row: ErpRow) {
-    const e = row as Expense
+    const e = row as unknown as Expense
     if (!confirm(`Delete expense "${e.description}"?`)) return
     const res = await fetch(`/api/administrator/expenses/${e.id}`, { method: 'DELETE' })
     if (res.ok) { setRows((r) => r.filter((x) => x.id !== e.id)); toast.success('Expense deleted') }
@@ -141,7 +141,7 @@ export function ExpensesClient({ expenses, canExport }: { expenses: Expense[]; c
   }
 
   function renderCell(column: ErpColumn, row: ErpRow): React.ReactNode {
-    const e = row as Expense
+    const e = row as unknown as Expense
     if (column.key === 'status') {
       return (
         <Select value={e.status} onValueChange={(v) => handleStatusChange(e, v)}>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Star, Heart, ShoppingCart, PackageSearch, Eye, Trash2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -28,7 +28,22 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const [imgError, setImgError] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [bogoActive, setBogoActive] = useState(false)
   const wishlisted = isInWishlist(product.id)
+
+  // BOGO offer flag — public endpoint, browser-cached across cards
+  useEffect(() => {
+    let active = true
+    fetch('/api/offers')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active && data) setBogoActive(!!data.bogoActive)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Calculate pricing based on first variant if it contains weight values with prices
   const activePricing = (() => {
@@ -134,6 +149,17 @@ export default function ProductCard({ product }: ProductCardProps) {
         {discountPercent > 0 && (
           <Badge className="absolute top-2 left-2 bg-red-500 text-white hover:bg-red-600 border-0 text-[11px] font-semibold px-1.5 py-0.5">
             -{discountPercent}%
+          </Badge>
+        )}
+
+        {/* BOGO badge */}
+        {bogoActive && (
+          <Badge
+            className={`absolute left-2 bg-green-500 text-white hover:bg-green-500 border-0 text-[11px] font-extrabold px-1.5 py-0.5 tracking-wide shadow-sm animate-pulse ${
+              discountPercent > 0 ? 'top-9' : 'top-2'
+            }`}
+          >
+            BOGO
           </Badge>
         )}
 

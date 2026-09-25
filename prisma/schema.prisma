@@ -985,3 +985,73 @@ model ErpBankAccount {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+// ============================================================================
+// USER ACTIVITY CRM — storefront behavior tracking. Written fire-and-forget
+// by the client via POST /api/track (public, no auth); read by the admin
+// User Activity page. userId is an opaque string: the DB user id or email
+// when logged in, 'anonymous' otherwise.
+// ============================================================================
+model UserActivity {
+  id           String   @id @default(cuid())
+  userId       String
+  activityType String // view_product | add_to_cart | remove_from_cart | begin_checkout | search
+  productId    String?
+  productName  String?
+  metadata     Json     @default("{}") // {query, variant, qty, price...}
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([activityType])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// ERP MODULES (Phase 9) — Mail Inbox, Balance Sheet, Invoice Revisions.
+// ============================================================================
+
+// Mail Inbox — unified inbox for the company email addresses
+// (support@ / contact@ / feedback@). See /administrator/mail-inbox.
+model ErpMailInbox {
+  id         String   @id @default(cuid())
+  toEmail    String   // support@mealicious.store etc
+  fromEmail  String
+  fromName   String
+  subject    String
+  body       String
+  isRead     Boolean  @default(false)
+  isStarred  Boolean  @default(false)
+  category   String   @default("General") // General|Support|Feedback|Sales
+  createdAt  DateTime @default(now())
+
+  @@index([toEmail])
+  @@index([isRead])
+}
+
+// Finance Department — Balance Sheet line items. Classic accounting identity:
+// Assets = Liabilities + Equity. Fiscal year ends March (asOfYear/asOfMonth).
+model ErpBalanceSheetItem {
+  id          String   @id @default(cuid())
+  section     String   // Assets|Liabilities|Equity
+  itemName    String
+  amount      Float    @default(0)
+  asOfYear    Int      @default(2026)
+  asOfMonth   Int      @default(3) // fiscal year end March
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([section])
+}
+
+// Invoices — full-state snapshot taken before every edit, for audit/history.
+model ErpInvoiceRevision {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoiceNumber String
+  snapshot    Json     // full invoice state at time of edit
+  editedBy    String
+  editReason  String?
+  createdAt   DateTime @default(now())
+
+  @@index([invoiceId])
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import {
   Sheet,
@@ -35,6 +35,21 @@ export default function CartSidebar() {
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null)
   const [couponError, setCouponError] = useState('')
+  const [bogoActive, setBogoActive] = useState(false)
+
+  // BOGO offer flag — public endpoint
+  useEffect(() => {
+    let active = true
+    fetch('/api/offers')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active && data) setBogoActive(!!data.bogoActive)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Calculations
   const subtotal = cartItems.reduce(
@@ -123,6 +138,16 @@ export default function CartSidebar() {
             Your shopping cart items and summary
           </SheetDescription>
         </SheetHeader>
+
+        {/* BOGO banner */}
+        {bogoActive && (
+          <div className="flex items-center gap-2 border-b border-green-100 bg-green-50 px-6 py-3">
+            <span className="text-lg leading-none">🎉</span>
+            <p className="text-sm font-bold text-green-700">
+              BOGO Active — Buy 1 Get 1 Free!
+            </p>
+          </div>
+        )}
 
         {cartItems.length === 0 ? (
           /* Empty Cart State */

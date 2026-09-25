@@ -15,8 +15,8 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const code = String(body.code || '').trim().toUpperCase()
   const type = String(body.type || '')
-  if (!code || !['prepaid', 'percent', 'flat'].includes(type)) {
-    return NextResponse.json({ error: 'Valid code and type (prepaid|percent|flat) are required' }, { status: 400 })
+  if (!code || !['prepaid', 'percent', 'flat', 'bogo', 'freegift'].includes(type)) {
+    return NextResponse.json({ error: 'Valid code and type (prepaid|percent|flat|bogo|freegift) are required' }, { status: 400 })
   }
   const existing = await db.discount.findUnique({ where: { code } })
   if (existing) return NextResponse.json({ error: `Discount code ${code} already exists` }, { status: 400 })

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { PromoBar } from '@/components/mealicious/PromoBar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -114,10 +115,8 @@ export default function Header() {
 
   return (
     <>
-      {/* Announcement Bar */}
-      <div className="bg-stone-900 text-white text-xs py-2 px-4 text-center font-medium select-none tracking-wide">
-        🎉 Free shipping on orders above ₹499! | Get 10% EXTRA discount on all Prepaid Orders!
-      </div>
+      {/* Dynamic Promo Bar — shows live offers (BOGO/Free Gift/Free Shipping) */}
+      <PromoBar />
 
       {/* Main Header */}
       <header

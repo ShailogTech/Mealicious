@@ -22,5 +22,11 @@ async function getData() {
 export default async function InvoicesPage() {
   const user = await requireErpPageUser()
   const { invoices } = await getData()
-  return <InvoicesClient invoices={invoices} canExport={user.role === 'SUPER_ADMIN'} />
+  return (
+    <InvoicesClient
+      invoices={invoices}
+      canExport={user.role === 'SUPER_ADMIN'}
+      canEdit={user.role === 'SUPER_ADMIN' || user.role === 'FINANCE'}
+    />
+  )
 }

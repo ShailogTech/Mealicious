@@ -22,7 +22,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { useAppStore } from '@/lib/store'
+import { useAppStore, trackActivity } from '@/lib/store'
 import { useCatalogStore } from '@/lib/catalog-store'
 import ProductCard from '@/components/mealicious/ProductCard'
 import { ShippingBox } from '@/components/mealicious/ShippingBox'
@@ -98,6 +98,18 @@ export default function ProductDetail() {
     return () => {
       active = false
     }
+  }, [product?.id])
+
+  // CRM activity log — one view_product event per product page visit
+  useEffect(() => {
+    const p = product
+    if (!p?.id) return
+    trackActivity({
+      activityType: 'view_product',
+      productId: p.id,
+      productName: p.name,
+      metadata: { price: p.salePrice ?? p.price },
+    })
   }, [product?.id])
 
   // Calculate dynamic variant-based price

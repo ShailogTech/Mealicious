@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 import { FinanceDeptClient } from './FinanceDeptClient'
 
 async function getData() {
-  const [transactions, invoices, purchaseOrders, expenses, journalEntries, accountEntries, budgets, fixedAssets] = await Promise.all([
+  const [transactions, invoices, purchaseOrders, expenses, journalEntries, accountEntries, budgets, fixedAssets, balanceSheetItems] = await Promise.all([
     db.erpTransaction.findMany({ select: { type: true, amount: true, date: true, category: true } }),
     db.erpInvoice.findMany({ select: { grandTotal: true, date: true, paymentMode: true } }),
     db.erpPurchaseOrder.findMany({ select: { amount: true, status: true, vendor: true } }),
@@ -15,6 +15,7 @@ async function getData() {
     db.erpAccountEntry.findMany({ select: { id: true, type: true, partyName: true, amount: true, balance: true, status: true, dueDate: true } }).catch(() => []),
     db.erpBudget.findMany({ select: { id: true, department: true, category: true, allocated: true, spent: true } }).catch(() => []),
     db.erpFixedAsset.findMany({ select: { id: true, name: true, category: true, purchaseValue: true, currentValue: true, status: true } }).catch(() => []),
+    db.erpBalanceSheetItem.findMany({ select: { id: true, section: true, itemName: true, amount: true } }).catch(() => []),
   ])
 
   const totalIncome = transactions.filter((t) => t.type === 'Income').reduce((s, t) => s + t.amount, 0)
@@ -72,6 +73,26 @@ async function getData() {
     fixedAssets: fixedAssets.slice(0, 10).map((a) => ({
       id: a.id, name: a.name, category: a.category, purchaseValue: a.purchaseValue, currentValue: a.currentValue, status: a.status,
     })),
+    balanceSheet: {
+      items: {
+        Assets: balanceSheetItems.filter((b) => b.section === 'Assets').map((b) => ({ id: b.id, itemName: b.itemName, amount: b.amount })),
+        Liabilities: balanceSheetItems.filter((b) => b.section === 'Liabilities').map((b) => ({ id: b.id, itemName: b.itemName, amount: b.amount })),
+        Equity: balanceSheetItems.filter((b) => b.section === 'Equity').map((b) => ({ id: b.id, itemName: b.itemName, amount: b.amount })),
+      },
+      totals: (() => {
+        const sum = (section: string) => balanceSheetItems.filter((b) => b.section === section).reduce((s, b) => s + b.amount, 0)
+        const assets = sum('Assets')
+        const liabilities = sum('Liabilities')
+        const equity = sum('Equity')
+        return {
+          assets,
+          liabilities,
+          equity,
+          liabilitiesAndEquity: liabilities + equity,
+          balanced: Math.abs(assets - (liabilities + equity)) < 0.01,
+        }
+      })(),
+    },
     journalCount: journalEntries.length,
   }
 }

@@ -79,6 +79,13 @@ export const ERP_MODULES: ErpModule[] = [
     icon: 'mail',
   },
   {
+    key: 'mailinbox',
+    label: 'Mail Inbox',
+    section: 'People & Operations',
+    href: '/administrator/mail-inbox',
+    icon: 'mailinbox',
+  },
+  {
     key: 'crm',
     label: 'CRM / Leads',
     section: 'People & Operations',

@@ -58,7 +58,7 @@ const ERP_PRODUCTIVITY_RULES = {
 function buildErpPermissions() {
   const modules = [
     'dashboard', 'employees', 'rbac', 'shifts', 'productivity', 'teams',
-    'groups', 'messages', 'mailtickets', 'crm', 'sales', 'billing', 'invoices',
+    'groups', 'messages', 'mailtickets', 'mailinbox', 'crm', 'sales', 'billing', 'invoices',
     'companysettings', 'purchase', 'vendors', 'inventory', 'manufacturing',
     'supplychain', 'projects', 'finance', 'analytics', 'reports', 'adminusers',
     'assets', 'franchise', 'distributors', 'retail', 'investors', 'campaigns',
@@ -70,12 +70,12 @@ function buildErpPermissions() {
   for (const key of modules) {
     matrix[key] = {
       SUPER_ADMIN: true,
-      FINANCE: ['dashboard', 'finance', 'expenses', 'invoices', 'billing', 'wholesale', 'purchase', 'reports', 'messages', 'mailtickets'].includes(key),
-      SALES: ['dashboard', 'crm', 'sales', 'billing', 'wholesale', 'invoices', 'customers', 'marketing', 'reports', 'messages', 'mailtickets'].includes(key),
-      OPS: ['dashboard', 'inventory', 'manufacturing', 'supplychain', 'assets', 'reports', 'messages', 'mailtickets'].includes(key),
-      HR: ['dashboard', 'employees', 'shifts', 'productivity', 'teams', 'groups', 'reports', 'messages', 'mailtickets'].includes(key),
-      EMPLOYEE: ['dashboard', 'projects', 'messages', 'mailtickets'].includes(key),
-      INTERN: ['dashboard', 'projects', 'messages', 'mailtickets'].includes(key),
+      FINANCE: ['dashboard', 'finance', 'expenses', 'invoices', 'billing', 'wholesale', 'purchase', 'reports', 'messages', 'mailtickets', 'mailinbox'].includes(key),
+      SALES: ['dashboard', 'crm', 'sales', 'billing', 'wholesale', 'invoices', 'customers', 'marketing', 'reports', 'messages', 'mailtickets', 'mailinbox'].includes(key),
+      OPS: ['dashboard', 'inventory', 'manufacturing', 'supplychain', 'assets', 'reports', 'messages', 'mailtickets', 'mailinbox'].includes(key),
+      HR: ['dashboard', 'employees', 'shifts', 'productivity', 'teams', 'groups', 'reports', 'messages', 'mailtickets', 'mailinbox'].includes(key),
+      EMPLOYEE: ['dashboard', 'projects', 'messages', 'mailtickets', 'mailinbox'].includes(key),
+      INTERN: ['dashboard', 'projects', 'messages', 'mailtickets', 'mailinbox'].includes(key),
     }
   }
   // Hard-locked super-admin-only modules — stripped from the togglable matrix.
@@ -440,12 +440,16 @@ async function seedDiscounts() {
     { code: 'FLAT50', type: 'flat', value: 50, minOrder: 599, description: '₹50 off on orders above ₹599' },
     { code: 'WELCOME', type: 'percent', value: 15, minOrder: 399, description: '15% welcome discount on orders above ₹399' },
     { code: 'IBUU50', type: 'flat', value: 49, minOrder: 0, description: '₹49 off (no minimum)' },
+    // Storefront offer toggles (disable/enable from /admin/discounts)
+    { code: 'BOGO', type: 'bogo', value: 1, minOrder: 0, description: 'Buy One Get One Free — toggles the BOGO offer' },
+    { code: 'FREEGIFT', type: 'freegift', value: 0, minOrder: 999, description: 'Free gift with orders above ₹999' },
   ]
   for (const d of discounts) {
     await prisma.discount.upsert({
       where: { code: d.code },
+      // Note: update does NOT touch isActive — admin enable/disable survives re-seed.
       update: { type: d.type, value: d.value, minOrder: d.minOrder, description: d.description },
-      create: { code: d.code, type: d.type, value: d.value, minOrder: d.minOrder, description: d.description, isActive: true },
+      create: { code: d.code, type: d.type, value: d.value, minOrder: d.minOrder, description: d.description, isActive: d.code !== 'BOGO' && d.code !== 'FREEGIFT' }, // offers start disabled
     })
   }
   console.log(`  ${discounts.length} discounts`)

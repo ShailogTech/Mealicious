@@ -1,18 +1,36 @@
 'use client'
 
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Wallet, TrendingUp, TrendingDown, DollarSign, FileText, Building2, AlertCircle } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Wallet, TrendingUp, TrendingDown, DollarSign, FileText, Building2, AlertCircle, Plus, Trash2, Scale } from 'lucide-react'
 import Link from 'next/link'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import {
   ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig,
 } from '@/components/ui/chart'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Pie, PieChart, Cell, Line, LineChart } from 'recharts'
 
 interface Kpi { label: string; value: number; format: 'inr' }
+interface BalanceSheetItem { id: string; itemName: string; amount: number }
+interface BalanceSheetTotals {
+  assets: number
+  liabilities: number
+  equity: number
+  liabilitiesAndEquity: number
+  balanced: boolean
+}
 interface Props {
   kpis: Kpi[]
   monthlyTrend: { month: string; income: number; expense: number }[]
@@ -20,8 +38,11 @@ interface Props {
   accountEntries: { id: string; type: string; partyName: string; amount: number; balance: number; status: string; dueDate: string }[]
   budgets: { id: string; department: string; category: string; allocated: number; spent: number }[]
   fixedAssets: { id: string; name: string; category: string; purchaseValue: number; currentValue: number; status: string }[]
+  balanceSheet: { items: { Assets: BalanceSheetItem[]; Liabilities: BalanceSheetItem[]; Equity: BalanceSheetItem[] }; totals: BalanceSheetTotals }
   journalCount: number
 }
+
+const BS_SECTIONS = ['Assets', 'Liabilities', 'Equity']
 
 const PIE_COLORS = ['#1b4332', '#d97706', '#3b7ea1', '#c1573b', '#78716c', '#e8a93b', '#2d6b4f', '#a3690f']
 const incomeConfig = { income: { label: 'Income', color: '#1b4332' }, expense: { label: 'Expense', color: '#c1573b' } } satisfies ChartConfig
@@ -31,9 +52,93 @@ const STATUS_VARIANT: Record<string, 'secondary' | 'destructive' | 'outline'> = 
   Open: 'outline', Settled: 'secondary', Overdue: 'destructive', 'Partially Paid': 'secondary',
 }
 
-export function FinanceDeptClient({ kpis, monthlyTrend, expenseByCategory, accountEntries, budgets, fixedAssets, journalCount }: Props) {
+export function FinanceDeptClient({ kpis, monthlyTrend, expenseByCategory, accountEntries, budgets, fixedAssets, balanceSheet, journalCount }: Props) {
   const kpiIcons = [DollarSign, TrendingDown, TrendingUp, FileText, FileText, Building2, AlertCircle, AlertCircle]
   const kpiColors = ['text-emerald-600', 'text-red-600', kpis[2]?.value >= 0 ? 'text-emerald-600' : 'text-red-600', 'text-blue-600', 'text-orange-600', 'text-purple-600', 'text-amber-600', 'text-red-600']
+
+  // Balance sheet local state (add/delete without full page reload)
+  const [bsItems, setBsItems] = useState(balanceSheet.items)
+  const [bsAddOpen, setBsAddOpen] = useState(false)
+  const [bsSaving, setBsSaving] = useState(false)
+  const [fSection, setFSection] = useState('Assets')
+  const [fItemName, setFItemName] = useState('')
+  const [fAmount, setFAmount] = useState('')
+
+  const bsTotals: BalanceSheetTotals = (() => {
+    const sum = (section: keyof typeof bsItems) => bsItems[section].reduce((s, i) => s + i.amount, 0)
+    const assets = sum('Assets')
+    const liabilities = sum('Liabilities')
+    const equity = sum('Equity')
+    return {
+      assets, liabilities, equity,
+      liabilitiesAndEquity: liabilities + equity,
+      balanced: Math.abs(assets - (liabilities + equity)) < 0.01,
+    }
+  })()
+
+  async function handleAddBsItem() {
+    const name = fItemName.trim()
+    if (!name) { toast.error('Item name is required'); return }
+    const amount = Number(fAmount) || 0
+    setBsSaving(true)
+    try {
+      const res = await fetch('/api/administrator/balance-sheet', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section: fSection, itemName: name, amount }),
+      })
+      if (res.ok) {
+        const { item } = await res.json()
+        setBsItems((prev) => ({ ...prev, [item.section]: [{ id: item.id, itemName: item.itemName, amount: item.amount }, ...prev[item.section as keyof typeof prev]] }))
+        toast.success('Balance sheet item added')
+        setBsAddOpen(false)
+        setFItemName(''); setFAmount('')
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast.error(data.error || 'Add failed')
+      }
+    } finally {
+      setBsSaving(false)
+    }
+  }
+
+  async function handleDeleteBsItem(item: BalanceSheetItem, section: string) {
+    const res = await fetch(`/api/administrator/balance-sheet/${item.id}`, { method: 'DELETE' }).catch(() => null)
+    if (res && res.ok) {
+      setBsItems((prev) => ({ ...prev, [section]: prev[section as keyof typeof prev].filter((x) => x.id !== item.id) }))
+      toast.success('Item removed')
+    } else {
+      toast.error('Delete failed')
+    }
+  }
+
+  function renderBsSection(title: string, section: 'Assets' | 'Liabilities' | 'Equity') {
+    const items = bsItems[section] ?? []
+    return (
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">{title}</p>
+        {items.length === 0 ? (
+          <p className="text-sm text-stone-400 py-3">No {title.toLowerCase()} items yet.</p>
+        ) : (
+          <table className="w-full text-sm">
+            <tbody>
+              {items.map((it) => (
+                <tr key={it.id} className="border-b border-stone-100 group">
+                  <td className="py-2">{it.itemName}</td>
+                  <td className="py-2 text-right font-medium whitespace-nowrap">{inr(it.amount)}</td>
+                  <td className="py-2 pl-2 w-8">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-700"
+                      onClick={() => handleDeleteBsItem(it, section)} title="Remove item">
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -194,6 +299,51 @@ export function FinanceDeptClient({ kpis, monthlyTrend, expenseByCategory, accou
         </Card>
       </div>
 
+      {/* Balance Sheet — Assets = Liabilities + Equity */}
+      <Card className="mb-6">
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <div className="flex items-center gap-2">
+            <Scale className="h-4 w-4 text-stone-500" />
+            <CardTitle className="text-base">Balance Sheet</CardTitle>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setBsAddOpen(true)}>
+            <Plus className="h-4 w-4" /> Add Item
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Left: Assets */}
+            <div>
+              {renderBsSection('Assets', 'Assets')}
+              <div className="flex items-center justify-between mt-3 pt-3 border-t-2 border-stone-200 text-sm font-bold text-stone-900">
+                <span>Total Assets</span>
+                <span>{inr(bsTotals.assets)}</span>
+              </div>
+            </div>
+            {/* Right: Liabilities + Equity */}
+            <div>
+              {renderBsSection('Liabilities', 'Liabilities')}
+              <div className="mt-4">
+                {renderBsSection('Equity', 'Equity')}
+              </div>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t-2 border-stone-200 text-sm font-bold text-stone-900">
+                <span>Total Liabilities + Equity</span>
+                <span>{inr(bsTotals.liabilitiesAndEquity)}</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 pt-3 border-t border-stone-100">
+            {bsTotals.balanced ? (
+              <Badge className="border-transparent bg-emerald-100 text-emerald-800">Balanced — Assets = Liabilities + Equity</Badge>
+            ) : (
+              <Badge variant="destructive">
+                Out of balance by {inr(Math.abs(bsTotals.assets - bsTotals.liabilitiesAndEquity))}
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Roadmap */}
       <Card className="bg-stone-50">
         <CardHeader><CardTitle className="text-base">Finance Roadmap — {journalCount} journal entries</CardTitle></CardHeader>
@@ -201,7 +351,7 @@ export function FinanceDeptClient({ kpis, monthlyTrend, expenseByCategory, accou
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-stone-500">
             {[
               'General Ledger (full double-entry)', 'GST/Tax Management with filing', 'Payroll Integration',
-              'P&L Statement generator', 'Balance Sheet generator', 'Cash Flow Statement',
+              'P&L Statement generator', 'Cash Flow Statement',
               'Bank Reconciliation', 'Payment Approval Workflow', 'Forecasting & Financial Analysis',
               'Audit Trail logging', 'Financial compliance reports',
             ].map((item) => (
@@ -210,9 +360,41 @@ export function FinanceDeptClient({ kpis, monthlyTrend, expenseByCategory, accou
               </div>
             ))}
           </div>
-          <p className="text-xs text-stone-400 mt-3">P&L, Budgets, AP/AR, Fixed Assets, and Expense tracking are live above. Full double-entry GL and tax filing are on the roadmap.</p>
+          <p className="text-xs text-stone-400 mt-3">P&L, Budgets, AP/AR, Fixed Assets, Balance Sheet, and Expense tracking are live above. Full double-entry GL and tax filing are on the roadmap.</p>
         </CardContent>
       </Card>
+
+      {/* Add Balance Sheet Item dialog */}
+      <Dialog open={bsAddOpen} onOpenChange={(o) => { setBsAddOpen(o); if (!o) { setFSection('Assets'); setFItemName(''); setFAmount('') } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Add Balance Sheet Item</DialogTitle></DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label>Section <span className="text-red-500">*</span></Label>
+              <Select value={fSection} onValueChange={setFSection}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {BS_SECTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Item Name <span className="text-red-500">*</span></Label>
+              <Input value={fItemName} onChange={(e) => setFItemName(e.target.value)} placeholder="e.g. Cash & Bank / Loans / Share Capital" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Amount (₹)</Label>
+              <Input type="number" value={fAmount} onChange={(e) => setFAmount(e.target.value)} placeholder="0" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBsAddOpen(false)} disabled={bsSaving}>Cancel</Button>
+            <Button onClick={handleAddBsItem} disabled={bsSaving}>
+              {bsSaving ? 'Adding…' : <><Plus className="h-4 w-4" /> Add</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
