@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Sparkles, Truck, Gift } from 'lucide-react'
+import { Gift, Sparkles, Truck, Leaf } from 'lucide-react'
 
 interface Offers {
   bogoActive: boolean
@@ -10,53 +10,44 @@ interface Offers {
   freeShippingThreshold: number
 }
 
+const STATIC_MESSAGES = [
+  { icon: <Leaf className="h-3 w-3" />, text: '100% ORGANIC INGREDIENTS' },
+  { icon: <Truck className="h-3 w-3" />, text: 'FREE SHIPPING ON ORDERS ABOVE ₹499' },
+  { icon: <Sparkles className="h-3 w-3" />, text: 'TRUSTED BY 10,000+ CUSTOMERS' },
+]
+
 /**
- * Sticky top promo bar showing active offers (BOGO / Free Gift / Free Shipping).
- * Fetches from /api/offers on mount. Hides if no offers are active.
- * Premium D2C-style: subtle gradient, small text, smooth slide-in.
+ * Marquee announcement bar — continuously scrolling offers strip.
+ * Dynamically includes BOGO / Free Gift when enabled in /admin/discounts.
  */
 export function PromoBar() {
-  // ALL hooks must be declared before any early return (React hooks order rule).
   const [offers, setOffers] = useState<Offers | null>(null)
-  const [visible, setVisible] = useState(true)
-  const [active, setActive] = useState(0)
 
   useEffect(() => {
     fetch('/api/offers').then((r) => r.json()).then(setOffers).catch(() => setOffers(null))
   }, [])
 
-  if (!offers || !visible) return null
-
-  const messages: { icon: React.ReactNode; text: string }[] = []
-  if (offers.bogoActive) {
-    messages.push({ icon: <Sparkles className="h-3.5 w-3.5" />, text: 'BOGO Live — Buy 1 Get 1 Free' })
+  const messages = [...STATIC_MESSAGES]
+  if (offers?.bogoActive) {
+    messages.unshift({ icon: <Sparkles className="h-3 w-3" />, text: 'BUY 1 GET 1 FREE — LIMITED TIME' })
   }
-  if (offers.freeGiftActive) {
-    messages.push({ icon: <Gift className="h-3.5 w-3.5" />, text: `Free Gift on orders above ₹${offers.freeGiftMinOrder}` })
+  if (offers?.freeGiftActive) {
+    messages.unshift({ icon: <Gift className="h-3 w-3" />, text: `FREE GIFT ON ORDERS ABOVE ₹${offers.freeGiftMinOrder}` })
   }
-  messages.push({ icon: <Truck className="h-3.5 w-3.5" />, text: `Free Shipping over ₹${offers.freeShippingThreshold}` })
 
-  // If only the evergreen free-shipping message remains and BOGO/gift are off,
-  // still show it — it's a conversion driver.
+  // Duplicate the sequence so the CSS marquee loops seamlessly.
+  const strip = [...messages, ...messages]
 
   return (
-    <div
-      className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 text-emerald-50 text-xs font-medium sticky top-0 z-40 transition-transform duration-300"
-      role="banner"
-    >
-      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-2 relative">
-        <span className="flex items-center gap-1.5">
-          {messages[active]?.icon}
-          <span>{messages[active]?.text}</span>
-        </span>
-        {messages.length > 1 && (
-          <button
-            onClick={() => setActive((i) => (i + 1) % messages.length)}
-            className="absolute right-3 text-emerald-300 hover:text-emerald-100 transition-colors text-[10px] underline underline-offset-2"
-          >
-            next offer
-          </button>
-        )}
+    <div className="overflow-hidden bg-stone-950 text-stone-100 border-b border-white/5 select-none" role="banner">
+      <div className="marquee-track flex w-max items-center gap-0 py-1.5">
+        {strip.map((m, i) => (
+          <span key={i} className="flex items-center gap-1.5 px-6 text-[10px] font-bold uppercase tracking-[0.18em] whitespace-nowrap">
+            <span className="text-orange-400">{m.icon}</span>
+            {m.text}
+            <span className="ml-6 text-orange-500">✦</span>
+          </span>
+        ))}
       </div>
     </div>
   )

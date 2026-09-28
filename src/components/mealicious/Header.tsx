@@ -122,8 +122,8 @@ export default function Header() {
       <header
         className={`sticky top-0 z-40 w-full transition-all duration-300 ${
           scrolled
-            ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-gray-100'
-            : 'bg-white backdrop-blur-sm border-b border-gray-100'
+            ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-border'
+            : 'bg-background backdrop-blur-sm border-b border-border'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -135,7 +135,7 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="mr-2 text-gray-700 hover:text-orange-400 hover:bg-blue-50"
+                    className="mr-2 text-foreground hover:text-orange-400 hover:bg-blue-50"
                     aria-label="Open menu"
                   >
                     <Menu className="h-5 w-5" />
@@ -144,7 +144,7 @@ export default function Header() {
                 <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0">
                   <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                   {/* Mobile Menu Header */}
-                  <div className="flex items-center gap-2 px-6 py-5 border-b border-gray-100 bg-blue-50">
+                  <div className="flex items-center gap-2 px-6 py-5 border-b border-border bg-blue-50">
                     <Leaf className="h-6 w-6 text-orange-400" />
                     <span className="text-xl font-bold text-orange-400 tracking-tight">
                       MEALICIOUS
@@ -160,7 +160,7 @@ export default function Header() {
                         className={`flex items-center justify-between px-6 py-3.5 text-sm font-medium transition-colors ${
                           isActivePage(link.page)
                             ? 'text-orange-400 bg-blue-50 border-r-3 border-orange-400'
-                            : 'text-gray-700 hover:text-orange-400 hover:bg-blue-50/50'
+                            : 'text-foreground hover:text-orange-400 hover:bg-blue-50/50'
                         }`}
                       >
                         <span>{link.label}</span>
@@ -170,7 +170,7 @@ export default function Header() {
                   </nav>
 
                   {/* Mobile Menu Footer */}
-                  <div className="border-t border-gray-100 px-6 py-4 space-y-3 mt-auto">
+                  <div className="border-t border-border px-6 py-4 space-y-3 mt-auto">
                     {isLoggedIn && user ? (
                       <div className="space-y-3">
                         <div className="flex items-center gap-3 py-2">
@@ -178,13 +178,13 @@ export default function Header() {
                             <User className="h-4 w-4 text-orange-400" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                            <p className="text-xs text-gray-500">{user.email}</p>
+                            <p className="text-sm font-medium text-foreground">{user.name}</p>
+                            <p className="text-xs text-muted-foreground">{user.email}</p>
                           </div>
                         </div>
                         <button
                           onClick={() => handleNavClick('profile')}
-                          className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:text-orange-400 hover:bg-blue-50 rounded-md transition-colors"
+                          className="w-full text-left px-3 py-2.5 text-sm text-foreground hover:text-orange-400 hover:bg-blue-50 rounded-md transition-colors"
                         >
                           My Profile
                         </button>
@@ -198,7 +198,7 @@ export default function Header() {
                         )}
                         <button
                           onClick={() => handleNavClick('wishlist')}
-                          className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:text-orange-400 hover:bg-blue-50 rounded-md transition-colors flex items-center justify-between"
+                          className="w-full text-left px-3 py-2.5 text-sm text-foreground hover:text-orange-400 hover:bg-blue-50 rounded-md transition-colors flex items-center justify-between"
                         >
                           <span>Wishlist</span>
                           {wishlistCount > 0 && (
@@ -250,7 +250,7 @@ export default function Header() {
                 <Leaf className="h-7 w-7 text-orange-400 group-hover:text-orange-400 transition-colors" />
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-lg sm:text-xl font-extrabold tracking-tight text-gray-900 group-hover:text-orange-400 transition-colors">
+                <span className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground group-hover:text-orange-400 transition-colors">
                   MEALICIOUS
                 </span>
                 <span className="text-[9px] sm:text-[10px] font-medium text-orange-400 tracking-[0.15em] uppercase">
@@ -268,7 +268,7 @@ export default function Header() {
                   className={`relative px-3 py-2 text-sm font-medium transition-colors rounded-md ${
                     isActivePage(link.page)
                       ? 'text-orange-400 bg-blue-50'
-                      : 'text-gray-600 hover:text-orange-400 hover:bg-blue-50/50'
+                      : 'text-muted-foreground hover:text-orange-400 hover:bg-blue-50/50'
                   }`}
                 >
                   {link.label}
@@ -289,7 +289,7 @@ export default function Header() {
                     className="flex items-center gap-2 animate-in slide-in-from-right-5 duration-200"
                   >
                     <div className="relative">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/70" />
                       <Input
                         type="text"
                         placeholder="Search products..."
@@ -303,7 +303,7 @@ export default function Header() {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-9 w-9 text-gray-500 hover:text-gray-700 shrink-0"
+                      className="h-9 w-9 text-muted-foreground hover:text-foreground shrink-0"
                       onClick={handleSearchClose}
                       aria-label="Close search"
                     >
@@ -314,7 +314,7 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                    className="text-muted-foreground hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
                     onClick={() => setSearchOpen(true)}
                     aria-label="Open search"
                   >
@@ -327,7 +327,7 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                className="relative text-muted-foreground hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
                 onClick={() => handleNavClick('notifications')}
                 aria-label="Notifications"
               >
@@ -338,7 +338,7 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                className="relative text-muted-foreground hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
                 onClick={() => handleNavClick('wishlist')}
                 aria-label="Wishlist"
               >
@@ -354,7 +354,7 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                className="relative text-muted-foreground hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
                 onClick={() => setCartOpen(true)}
                 aria-label="Shopping cart"
               >
@@ -373,7 +373,7 @@ export default function Header() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="relative text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                      className="relative text-muted-foreground hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
                       aria-label="Account menu"
                     >
                       <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-blue-100 flex items-center justify-center">
@@ -433,7 +433,7 @@ export default function Header() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                  className="text-muted-foreground hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
                   onClick={() => handleNavClick('login')}
                   aria-label="Sign in"
                 >

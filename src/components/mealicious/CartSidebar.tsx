@@ -155,10 +155,10 @@ export default function CartSidebar() {
             <div className="flex size-20 items-center justify-center rounded-full bg-blue-50">
               <ShoppingBag className="size-10 text-blue-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-foreground">
               Your cart is empty
             </h3>
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-muted-foreground">
               Looks like you haven&apos;t added anything to your cart yet.
               Explore our delicious snacks and dry fruits!
             </p>
@@ -184,10 +184,10 @@ export default function CartSidebar() {
                   return (
                     <div
                       key={itemKey}
-                      className="flex gap-3 rounded-lg border border-gray-100 bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
+                      className="flex gap-3 rounded-lg border border-border bg-background p-3 shadow-sm transition-shadow hover:shadow-md"
                     >
                       {/* Product Image */}
-                      <div className="size-20 flex-shrink-0 overflow-hidden rounded-md bg-gray-50">
+                      <div className="size-20 flex-shrink-0 overflow-hidden rounded-md bg-muted">
                         <img
                           src={item.image}
                           alt={item.name}
@@ -199,11 +199,11 @@ export default function CartSidebar() {
                       <div className="flex flex-1 flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <h4 className="truncate text-sm font-semibold text-gray-900">
+                            <h4 className="truncate text-sm font-semibold text-foreground">
                               {item.name}
                             </h4>
                             {item.variant && (
-                              <p className="mt-0.5 text-xs text-gray-500">
+                              <p className="mt-0.5 text-xs text-muted-foreground">
                                 {item.variantType
                                   ? `${item.variantType}: ${item.variant}`
                                   : item.variant}
@@ -213,7 +213,7 @@ export default function CartSidebar() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-7 flex-shrink-0 text-gray-400 hover:text-red-500"
+                            className="size-7 flex-shrink-0 text-muted-foreground/70 hover:text-red-500"
                             onClick={() =>
                               removeFromCart(item.productId, item.variant)
                             }
@@ -224,11 +224,11 @@ export default function CartSidebar() {
 
                         <div className="mt-2 flex items-center justify-between">
                           {/* Quantity Controls */}
-                          <div className="flex items-center gap-0.5 rounded-md border border-gray-200">
+                          <div className="flex items-center gap-0.5 rounded-md border border-border">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="size-7 rounded-none rounded-l-md text-gray-600 hover:bg-gray-100"
+                              className="size-7 rounded-none rounded-l-md text-muted-foreground hover:bg-muted"
                               onClick={() =>
                                 updateQuantity(
                                   item.productId,
@@ -240,13 +240,13 @@ export default function CartSidebar() {
                             >
                               <Minus className="size-3" />
                             </Button>
-                            <span className="flex h-7 w-8 items-center justify-center text-sm font-medium text-gray-900">
+                            <span className="flex h-7 w-8 items-center justify-center text-sm font-medium text-foreground">
                               {item.quantity}
                             </span>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="size-7 rounded-none rounded-r-md text-gray-600 hover:bg-gray-100"
+                              className="size-7 rounded-none rounded-r-md text-muted-foreground hover:bg-muted"
                               onClick={() =>
                                 updateQuantity(
                                   item.productId,
@@ -268,12 +268,12 @@ export default function CartSidebar() {
                                 <span className="text-sm font-bold text-orange-400">
                                   ₹{lineTotal}
                                 </span>
-                                <span className="text-xs text-gray-400 line-through">
+                                <span className="text-xs text-muted-foreground/70 line-through">
                                   ₹{item.price * item.quantity}
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-sm font-bold text-gray-900">
+                              <span className="text-sm font-bold text-foreground">
                                 ₹{lineTotal}
                               </span>
                             )}
@@ -287,7 +287,7 @@ export default function CartSidebar() {
             </ScrollArea>
 
             {/* Cart Summary - Fixed Bottom */}
-            <div className="border-t bg-white px-6 pb-6 pt-4">
+            <div className="border-t bg-background px-6 pb-6 pt-4">
               {/* Coupon Code */}
               <div className="mb-4">
                 {appliedCoupon ? (
@@ -304,7 +304,7 @@ export default function CartSidebar() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-auto p-0 text-xs text-gray-500 hover:text-red-500"
+                      className="h-auto p-0 text-xs text-muted-foreground hover:text-red-500"
                       onClick={handleRemoveCoupon}
                     >
                       Remove
@@ -313,7 +313,7 @@ export default function CartSidebar() {
                 ) : (
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Tag className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
+                      <Tag className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/70" />
                       <Input
                         placeholder="Coupon code"
                         value={couponCode}
@@ -347,34 +347,34 @@ export default function CartSidebar() {
               {/* Price Breakdown */}
               <div className="mb-4 space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium text-gray-900">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-medium text-foreground">
                     ₹{subtotal}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
+                  <span className="text-muted-foreground">Shipping</span>
                   {shipping === 0 ? (
                     <span className="font-medium text-orange-400">Free</span>
                   ) : (
-                    <span className="font-medium text-gray-900">₹{shipping}</span>
+                    <span className="font-medium text-foreground">₹{shipping}</span>
                   )}
                 </div>
                 {discount > 0 && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Discount</span>
+                    <span className="text-muted-foreground">Discount</span>
                     <span className="font-medium text-orange-400">
                       -₹{discount}
                     </span>
                   </div>
                 )}
                 {gstBreakdown.gstTotal > 0 && (
-                  <div className="flex items-center justify-between text-xs text-gray-400 pt-1">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground/70 pt-1">
                     <span>Incl. CGST ₹{gstBreakdown.cgst.toFixed(2)} · SGST ₹{gstBreakdown.sgst.toFixed(2)}</span>
                   </div>
                 )}
                 {shipping > 0 && (
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-muted-foreground/70">
                     Add ₹{499 - subtotal} more for free shipping
                   </p>
                 )}
@@ -384,8 +384,8 @@ export default function CartSidebar() {
 
               {/* Total */}
               <div className="mb-4 flex items-center justify-between">
-                <span className="text-base font-bold text-gray-900">Total</span>
-                <span className="text-base font-bold text-gray-900">
+                <span className="text-base font-bold text-foreground">Total</span>
+                <span className="text-base font-bold text-foreground">
                   ₹{total}
                 </span>
               </div>
@@ -402,7 +402,7 @@ export default function CartSidebar() {
 
               <Button
                 variant="ghost"
-                className="mt-2 w-full text-sm text-gray-500 hover:text-orange-400"
+                className="mt-2 w-full text-sm text-muted-foreground hover:text-orange-400"
                 onClick={handleContinueShopping}
               >
                 Continue Shopping

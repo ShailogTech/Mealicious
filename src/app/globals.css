@@ -44,72 +44,79 @@
 }
 
 :root {
+  /* ── Light theme: "Crisp High-Energy D2C Wellness" (Stitch design) ── */
   --radius: 0.625rem;
-  --background: #ea580c;
-  --foreground: oklch(0.18 0.04 250);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.04 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.04 250);
-  --primary: oklch(0.78 0.17 65);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.55 0.18 255);
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.97 0.01 250);
-  --muted-foreground: oklch(0.48 0.04 250);
-  --accent: oklch(0.93 0.05 255);
-  --accent-foreground: oklch(0.45 0.18 255);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0.03 250);
-  --input: oklch(0.9 0.03 250);
-  --ring: oklch(0.78 0.17 65);
-  --chart-1: oklch(0.78 0.17 65);
-  --chart-2: oklch(0.55 0.18 255);
-  --chart-3: oklch(0.78 0.14 60);
-  --chart-4: oklch(0.65 0.17 250);
-  --chart-5: oklch(0.82 0.1 65);
-  --sidebar: oklch(0.98 0.01 250);
-  --sidebar-foreground: oklch(0.18 0.04 250);
-  --sidebar-primary: oklch(0.78 0.17 65);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.93 0.05 255);
-  --sidebar-accent-foreground: oklch(0.45 0.18 255);
-  --sidebar-border: oklch(0.9 0.03 250);
-  --sidebar-ring: oklch(0.78 0.17 65);
+  --background: #fbf8fb;
+  --foreground: #1b1b1d;
+  --card: #ffffff;
+  --card-foreground: #1b1b1d;
+  --popover: #ffffff;
+  --popover-foreground: #1b1b1d;
+  --primary: #d04400;
+  --primary-foreground: #fffbff;
+  --secondary: #f0edef;
+  --secondary-foreground: #5c4037;
+  --muted: #f6f3f5;
+  --muted-foreground: #5c4037;
+  --accent: #ffdbcf;
+  --accent-foreground: #822700;
+  --destructive: #ba1a1a;
+  --border: #eae7ea;
+  --input: #e4e2e4;
+  --ring: #d04400;
+  --chart-1: #d04400;
+  --chart-2: #5f5e60;
+  --chart-3: #ffb59c;
+  --chart-4: #822700;
+  --chart-5: #e5beb2;
+  --sidebar: #f6f3f5;
+  --sidebar-foreground: #1b1b1d;
+  --sidebar-primary: #d04400;
+  --sidebar-primary-foreground: #fffbff;
+  --sidebar-accent: #ffdbcf;
+  --sidebar-accent-foreground: #822700;
+  --sidebar-border: #eae7ea;
+  --sidebar-ring: #d04400;
+  /* Brand utilities */
+  --brand-orange: #ff6b00;
+  --brand-deep: #a63500;
+  --brand-cream: #fbf8fb;
+  --brand-ink: #1b1b1d;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* ── Dark theme: "Kinetic Crunch" (Stitch design) ── */
+  --background: #131314;
+  --foreground: #e5e2e3;
+  --card: #1c1b1c;
+  --card-foreground: #e5e2e3;
+  --popover: #1c1b1c;
+  --popover-foreground: #e5e2e3;
+  --primary: #ff6b00;
+  --primary-foreground: #ffffff;
+  --secondary: #2a2a2b;
+  --secondary-foreground: #e2bfb0;
+  --muted: #201f20;
+  --muted-foreground: #a98a7d;
+  --accent: #3a2a20;
+  --accent-foreground: #ffb693;
+  --destructive: #ffb4ab;
+  --border: #353436;
+  --input: #2a2a2b;
+  --ring: #ff6b00;
+  --chart-1: #ff6b00;
+  --chart-2: #ffb693;
+  --chart-3: #feb300;
+  --chart-4: #ffd799;
+  --chart-5: #a98a7d;
+  --sidebar: #1c1b1c;
+  --sidebar-foreground: #e5e2e3;
+  --sidebar-primary: #ff6b00;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #3a2a20;
+  --sidebar-accent-foreground: #ffb693;
+  --sidebar-border: #353436;
+  --sidebar-ring: #ff6b00;
 }
 
 @layer base {
@@ -154,4 +161,16 @@
       animation-iteration-count: 1 !important;
     }
   }
+}
+
+/* ── Storefront marquee (top offers strip) ── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 28s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
 }

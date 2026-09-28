@@ -125,11 +125,11 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card
-      className="group cursor-pointer overflow-hidden py-0 gap-0 border-border/50 hover:shadow-lg transition-all duration-300"
+      className="group cursor-pointer overflow-hidden rounded-xl py-0 gap-0 border-border hover:border-primary hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
       onClick={handleCardClick}
     >
       {/* Image container */}
-      <div className="relative aspect-square overflow-hidden bg-muted">
+      <div className="relative aspect-square overflow-hidden bg-muted rounded-t-xl">
         {!imgError ? (
           <Image
             src={product.images[0]}
@@ -140,22 +140,22 @@ export default function ProductCard({ product }: ProductCardProps) {
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted-foreground bg-blue-50">
+          <div className="flex h-full w-full items-center justify-center text-muted-foreground bg-muted">
             <PackageSearch className="h-10 w-10" />
           </div>
         )}
 
         {/* Discount badge */}
         {discountPercent > 0 && (
-          <Badge className="absolute top-2 left-2 bg-red-500 text-white hover:bg-red-600 border-0 text-[11px] font-semibold px-1.5 py-0.5">
-            -{discountPercent}%
+          <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground hover:bg-primary border-0 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full">
+            -{discountPercent}% Off
           </Badge>
         )}
 
         {/* BOGO badge */}
         {bogoActive && (
           <Badge
-            className={`absolute left-2 bg-green-500 text-white hover:bg-green-500 border-0 text-[11px] font-extrabold px-1.5 py-0.5 tracking-wide shadow-sm animate-pulse ${
+            className={`absolute left-2 bg-green-500 text-white hover:bg-green-500 border-0 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full shadow-sm animate-pulse ${
               discountPercent > 0 ? 'top-9' : 'top-2'
             }`}
           >
@@ -165,8 +165,8 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* New badge */}
         {product.isNew && (
-          <Badge className="absolute top-2 right-10 bg-orange-400 text-white hover:bg-orange-400 border-0 text-[11px] font-semibold px-1.5 py-0.5">
-            NEW
+          <Badge className="absolute top-2 right-10 bg-foreground text-background hover:bg-foreground border-0 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full">
+            New
           </Badge>
         )}
 
@@ -174,13 +174,13 @@ export default function ProductCard({ product }: ProductCardProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm"
+          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-card/90 backdrop-blur-sm border border-border hover:bg-card shadow-sm"
           onClick={handleWishlist}
           aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
         >
           <Heart
             className={`h-4 w-4 transition-colors ${
-              wishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600'
+              wishlisted ? 'fill-red-500 text-red-500' : 'text-muted-foreground'
             }`}
           />
         </Button>
@@ -189,12 +189,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-11 right-2 h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm"
+          className="absolute top-11 right-2 h-8 w-8 rounded-full bg-card/90 backdrop-blur-sm border border-border hover:bg-card shadow-sm"
           onClick={handleOpenProduct}
           aria-label="Open product page"
           title="Open product page"
         >
-          <Eye className="h-4 w-4 text-gray-700" />
+          <Eye className="h-4 w-4 text-muted-foreground" />
         </Button>
 
         {/* Admin-only delete */}
@@ -202,25 +202,25 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute bottom-2 left-2 h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm hover:bg-red-50 shadow-sm"
+            className="absolute bottom-2 left-2 h-8 w-8 rounded-full bg-card/90 backdrop-blur-sm border border-border hover:bg-destructive/10 shadow-sm"
             onClick={handleDelete}
             disabled={deleting}
             aria-label="Delete product"
             title="Delete product"
           >
-            <Trash2 className={`h-4 w-4 text-red-600 ${deleting ? 'animate-pulse' : ''}`} />
+            <Trash2 className={`h-4 w-4 text-destructive ${deleting ? 'animate-pulse' : ''}`} />
           </Button>
         )}
       </div>
 
       <CardContent className="p-3 sm:p-4 space-y-2">
-        {/* Category badge */}
-        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-medium">
+        {/* Category label */}
+        <span className="block text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
           {product.category}
-        </Badge>
+        </span>
 
         {/* Name */}
-        <h3 className="font-serif text-sm sm:text-base font-bold leading-tight line-clamp-2 min-h-[2.5rem] text-stone-900 dark:text-stone-100">
+        <h3 className="text-sm sm:text-base font-black uppercase tracking-tight leading-tight line-clamp-2 min-h-[2.5rem] text-foreground">
           {product.name}
         </h3>
 
@@ -232,7 +232,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 key={star}
                 className={`h-3 w-3 ${
                   star <= Math.round(product.rating)
-                    ? 'fill-orange-400 text-orange-400'
+                    ? 'fill-primary text-primary'
                     : 'fill-muted text-muted'
                 }`}
               />
@@ -245,7 +245,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Price */}
         <div className="flex items-baseline gap-2">
-          <span className="text-lg font-bold text-orange-400">
+          <span className="text-lg font-black text-primary">
             ₹{displayPrice}
           </span>
           {product.salePrice && (
@@ -260,7 +260,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Add to Cart */}
         <Button
-          className="w-full bg-orange-400 hover:bg-orange-400 text-white text-xs sm:text-sm h-8 sm:h-9"
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-black tracking-wide text-xs h-9 rounded-full"
           onClick={handleAddToCart}
         >
           <ShoppingCart className="h-3.5 w-3.5 mr-1" />
