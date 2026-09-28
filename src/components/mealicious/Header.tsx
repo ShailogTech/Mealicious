@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTheme } from 'next-themes'
 import { useAppStore, type Page } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
@@ -25,6 +26,8 @@ import {
   X,
   Leaf,
   ChevronRight,
+  Sun,
+  Moon,
   LogOut,
   UserCircle,
   Shield,
@@ -71,6 +74,12 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Theme toggle — mounted guard avoids hydration mismatch (next-themes
+  // resolves the actual theme only on the client).
+  const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   // Sync local search state with store
   useEffect(() => {
@@ -322,6 +331,22 @@ export default function Header() {
                   </Button>
                 )}
               </div>
+
+              {/* Theme toggle (dark / light) */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-muted-foreground hover:text-orange-400 hover:bg-accent h-9 w-9 sm:h-10 sm:w-10"
+                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                aria-label="Toggle theme"
+              >
+                {/* Render icon only after mount to avoid hydration mismatch */}
+                {mounted && resolvedTheme === 'dark' ? (
+                  <Sun className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+                ) : (
+                  <Moon className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+                )}
+              </Button>
 
               {/* Notifications */}
               <Button

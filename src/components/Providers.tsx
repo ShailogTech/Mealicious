@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { ThemeProvider } from 'next-themes'
 import { onAuthStateChanged } from 'firebase/auth'
 import { getFirebaseAuth } from '@/lib/firebase'
 import { useAppStore } from '@/lib/store'
@@ -56,10 +57,10 @@ function AuthBridge() {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <PublicDataBridge />
       <AuthBridge />
       {children}
-    </>
+    </ThemeProvider>
   )
 }
