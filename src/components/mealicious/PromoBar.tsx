@@ -16,8 +16,10 @@ interface Offers {
  * Premium D2C-style: subtle gradient, small text, smooth slide-in.
  */
 export function PromoBar() {
+  // ALL hooks must be declared before any early return (React hooks order rule).
   const [offers, setOffers] = useState<Offers | null>(null)
   const [visible, setVisible] = useState(true)
+  const [active, setActive] = useState(0)
 
   useEffect(() => {
     fetch('/api/offers').then((r) => r.json()).then(setOffers).catch(() => setOffers(null))
@@ -36,7 +38,6 @@ export function PromoBar() {
 
   // If only the evergreen free-shipping message remains and BOGO/gift are off,
   // still show it — it's a conversion driver.
-  const [active, setActive] = useState(0)
 
   return (
     <div
