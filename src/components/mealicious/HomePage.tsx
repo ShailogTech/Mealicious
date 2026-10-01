@@ -600,7 +600,7 @@ export default function HomePage() {
                   The Mealicious Philosophy
                 </span>
                 <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight leading-[0.95] text-foreground">
-                  Khul Ke Khao.
+                  Snack Proud.
                   <br />
                   <span className="text-primary">Unapologetic Raw Nutrition.</span>
                 </h2>
@@ -656,7 +656,7 @@ export default function HomePage() {
                         &ldquo;Goodbye Old School Snacking&rdquo;
                       </p>
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mt-1">
-                        #KhulKeKhao Movement
+                        #SnackProud · Salem Born
                       </p>
                     </div>
                   </div>
