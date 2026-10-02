@@ -543,14 +543,11 @@ export default function HomePage() {
             />
           </FadeInWhenVisible>
 
-          {/* Horizontal scrollable row */}
+          {/* Responsive grid — cards shrink to fit any screen */}
           <FadeInWhenVisible>
-            <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {bestSellers.map((product) => (
-                <div
-                  key={product.id}
-                  className="min-w-[220px] sm:min-w-[260px] snap-start shrink-0"
-                >
+                <div key={product.id} className="min-w-0">
                   <ProductCard product={product} />
                 </div>
               ))}
