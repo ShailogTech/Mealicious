@@ -174,3 +174,17 @@
 .marquee-track:hover {
   animation-play-state: paused;
 }
+
+/* ── Smooth theme-switch crossfade ── */
+html[data-theme-transition],
+html[data-theme-transition] *,
+html[data-theme-transition] *::before,
+html[data-theme-transition] *::after {
+  transition:
+    background-color 350ms ease,
+    color 350ms ease,
+    border-color 350ms ease,
+    fill 350ms ease,
+    stroke 350ms ease !important;
+  transition-delay: 0 !important;
+}

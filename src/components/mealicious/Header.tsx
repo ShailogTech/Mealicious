@@ -81,6 +81,18 @@ export default function Header() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
+  // Smooth crossfade: enable the global transition class for one animation
+  // cycle, then remove it so hover transitions stay snappy afterwards.
+  const toggleTheme = useCallback(() => {
+    // Use a data attribute, NOT a class — next-themes replaces the html
+    // element's entire className on every setTheme, which wipes any class
+    // we add. Data attributes survive.
+    const html = document.documentElement
+    html.dataset.themeTransition = 'on'
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+    window.setTimeout(() => html.removeAttribute('data-theme-transition'), 450)
+  }, [resolvedTheme, setTheme])
+
   // Sync local search state with store
   useEffect(() => {
     const handle = requestAnimationFrame(() => {
@@ -337,7 +349,7 @@ export default function Header() {
                 variant="ghost"
                 size="icon"
                 className="relative text-muted-foreground hover:text-primary hover:bg-accent h-9 w-9 sm:h-10 sm:w-10"
-                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                onClick={toggleTheme}
                 aria-label="Toggle theme"
               >
                 {/* Render icon only after mount to avoid hydration mismatch */}

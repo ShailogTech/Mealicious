@@ -64,14 +64,14 @@ export default function Footer() {
   ]
 
   return (
-    <footer className="mt-auto bg-stone-950 text-muted-foreground/50">
+    <footer className="mt-auto bg-stone-950 text-stone-300">
       {/* Newsletter Section */}
       <div className="border-b border-stone-800">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center gap-6 text-center md:flex-row md:justify-between md:text-left">
             <div className="max-w-md">
               <h3 className="text-xl font-bold text-white">Subscribe to Our Newsletter</h3>
-              <p className="mt-1 text-sm text-muted-foreground/70">
+              <p className="mt-1 text-sm text-stone-300">
                 Get the latest updates on new products, exclusive deals & healthy snacking tips.
               </p>
             </div>
@@ -82,7 +82,7 @@ export default function Footer() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="border-gray-700 bg-stone-800 text-stone-200 placeholder:text-muted-foreground focus:border-orange-400 focus:ring-orange-400"
+                className="border-gray-700 bg-stone-800 text-stone-200 placeholder:text-stone-500 focus:border-orange-400 focus:ring-orange-400"
               />
               <Button
                 type="submit"
@@ -111,7 +111,7 @@ export default function Footer() {
             <p className="mt-1 text-xs text-orange-400 font-medium">
               Happiness for You. Nature's Goodness in Every Bite.
             </p>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground/70">
+            <p className="mt-3 text-sm leading-relaxed text-stone-300">
               Explore our range of flavoured makhana, millet-based chips, premium dry fruits, and wholesome snacks—made with quality ingredients, full of flavour, and perfect for healthy everyday snacking.
             </p>
             <div className="mt-5 flex gap-3">
@@ -122,7 +122,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-800 text-muted-foreground/70 transition-colors hover:bg-orange-400 hover:text-white"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-800 text-stone-300 transition-colors hover:bg-orange-400 hover:text-white"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -140,7 +140,7 @@ export default function Footer() {
                 <li key={page}>
                   <button
                     onClick={() => navigate(page)}
-                    className="text-sm text-muted-foreground/70 transition-colors hover:text-blue-400"
+                    className="text-sm text-stone-300 transition-colors hover:text-orange-300"
                   >
                     {label}
                   </button>
@@ -159,7 +159,7 @@ export default function Footer() {
                 <li key={page}>
                   <button
                     onClick={() => navigate(page)}
-                    className="text-sm text-muted-foreground/70 transition-colors hover:text-blue-400"
+                    className="text-sm text-stone-300 transition-colors hover:text-orange-300"
                   >
                     {label}
                   </button>
@@ -176,11 +176,11 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-orange-400" />
-                <span className="text-sm text-muted-foreground/70">support@mealicious.store</span>
+                <span className="text-sm text-stone-300">support@mealicious.store</span>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-orange-400" />
-                <span className="text-sm text-muted-foreground/70">
+                <span className="text-sm text-stone-300">
                   Mealicious Ventures Private Limited,
                   <br />
                   1/108, Elappankadu, Malankadu,
@@ -193,7 +193,7 @@ export default function Footer() {
             </ul>
 
             {/* Compliance Info */}
-            <div className="mt-5 text-xs text-muted-foreground space-y-1 font-mono">
+            <div className="mt-5 text-xs text-stone-400 space-y-1 font-mono">
               <p>FSSAI: 22426193000120</p>
               <p>GST: 33AAUCM2609Q1ZT</p>
               <p>CIN: U10799TZ2025PTC037179</p>
@@ -201,14 +201,14 @@ export default function Footer() {
 
             {/* Payment Icons */}
             <div className="mt-6">
-              <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-stone-400">
                 We Accept
               </p>
               <div className="flex flex-wrap gap-2">
                 {['Visa', 'Mastercard', 'UPI', 'PayPal', 'RuPay'].map((method) => (
                   <span
                     key={method}
-                    className="inline-flex items-center rounded bg-stone-800 px-2 py-1 text-[10px] font-semibold text-muted-foreground/50"
+                    className="inline-flex items-center rounded bg-stone-800 px-2 py-1 text-[10px] font-semibold text-stone-300"
                   >
                     {method}
                   </span>
@@ -222,7 +222,7 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div className="border-t border-stone-800">
         <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-xs text-stone-400">
             &copy; 2025 Mealicious Ventures Private Limited. All rights Reserved.
           </p>
         </div>
