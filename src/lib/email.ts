@@ -17,13 +17,16 @@ interface EmailPayload {
   to: string
   subject: string
   html: string
+  /** Override the sender address (e.g. contact@ / feedback@ mailboxes). Must be on a verified domain. */
+  fromOverride?: string
 }
 
-export async function sendEmail({ to, subject, html }: EmailPayload): Promise<boolean> {
+export async function sendEmail({ to, subject, html, fromOverride }: EmailPayload): Promise<boolean> {
   if (!isEmailConfigured()) {
     console.log('[email] Not configured, skipping send to', to)
     return false
   }
+  const from = fromOverride ? `Mealicious <${fromOverride}>` : fromEmail()
   try {
     const res = await fetch(RESEND_URL, {
       method: 'POST',
@@ -31,7 +34,7 @@ export async function sendEmail({ to, subject, html }: EmailPayload): Promise<bo
         'Authorization': `Bearer ${apiKey()}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ from: fromEmail(), to: [to], subject, html }),
+      body: JSON.stringify({ from, to: [to], subject, html }),
     })
     if (!res.ok) {
       console.error('[email] Send failed:', res.status, await res.text())

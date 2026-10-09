@@ -30,6 +30,8 @@ const COLUMNS: ErpColumn[] = [
   { key: 'price', label: 'Price', type: 'inr' },
 ]
 
+// Note: no GST field — all prices are MRP (tax-inclusive). Tax is derived
+// automatically from the standard slab (DEFAULT_GST_PCT) at invoice time.
 const FIELDS: ErpField[] = [
   { key: 'name', label: 'Product Name', type: 'text', required: true },
   { key: 'category', label: 'Category', type: 'select', options: CATEGORIES, required: true },
@@ -37,8 +39,7 @@ const FIELDS: ErpField[] = [
   { key: 'sku', label: 'SKU', type: 'text' },
   { key: 'stock', label: 'Stock Qty', type: 'number', required: true },
   { key: 'reorderLevel', label: 'Reorder Level', type: 'number' },
-  { key: 'price', label: 'Price (₹, GST incl.)', type: 'number', required: true },
-  { key: 'gstPct', label: 'GST %', type: 'number' },
+  { key: 'price', label: 'Price (₹, MRP incl. taxes)', type: 'number', required: true },
 ]
 
 export function InventoryClient({ items, canExport }: { items: InventoryItem[]; canExport?: boolean }) {

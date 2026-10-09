@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireErpRole } from '@/lib/erp-session'
+import { sendEmail } from '@/lib/email'
 
 const CATEGORIES = ['General', 'Support', 'Feedback', 'Sales']
 
@@ -30,9 +31,21 @@ export async function POST(req: NextRequest) {
   const subject = String(body.subject || '').trim()
   const bodyText = String(body.body || '').trim()
   const category = String(body.category || 'General')
+  // The company mailbox the message is sent FROM (support@/contact@/feedback@).
+  const fromMailbox = String(body.fromMailbox || 'support@mealicious.store').trim()
   if (!toEmail) return NextResponse.json({ error: 'To address is required' }, { status: 400 })
   if (!subject) return NextResponse.json({ error: 'Subject is required' }, { status: 400 })
   if (!bodyText) return NextResponse.json({ error: 'Message body is required' }, { status: 400 })
+
+  // Actually send via the email provider (Resend). If the provider isn't
+  // configured (missing RESEND_API_KEY / unverified domain), the message is
+  // still stored in the inbox as an Outbox record with a warning returned.
+  const sent = await sendEmail({
+    to: toEmail,
+    subject,
+    html: `<div style="font-family:Inter,Arial,sans-serif;white-space:pre-wrap">${bodyText.replace(/</g, '&lt;')}</div>`,
+    fromOverride: fromMailbox,
+  })
 
   const created = await db.erpMailInbox.create({
     data: {
@@ -45,5 +58,5 @@ export async function POST(req: NextRequest) {
       isRead: true,
     },
   })
-  return NextResponse.json({ mail: created })
+  return NextResponse.json({ mail: created, delivered: sent })
 }

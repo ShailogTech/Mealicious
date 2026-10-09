@@ -27,7 +27,9 @@ export async function POST(req: NextRequest) {
       stock: Number(body.stock) || 0,
       reorderLevel: Number(body.reorderLevel) || 0,
       price: Number(body.price) || 0,
-      gstPct: Number(body.gstPct) || 0,
+      // Prices are MRP (tax-inclusive) — tax auto-derived from the standard
+      // slab. No manual GST input per the client's request.
+      gstPct: Number(body.gstPct) || 5,
     },
   })
   return NextResponse.json({ item: created })
