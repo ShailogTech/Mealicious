@@ -1,48 +1,63 @@
+import nodemailer, { type Transporter } from 'nodemailer'
+
 /**
- * Email sending helper. Uses the Resend API (or falls back gracefully if not
- * configured). Fire-and-forget pattern — never blocks the caller.
+ * Email sending via the company's own mail server (mail.mealicious.store —
+ * A record 187.124.100.55, SPF + DKIM already configured on the zone).
  *
- * Environment variables needed:
- *   RESEND_API_KEY — Resend API key
- *   FROM_EMAIL — sender address (e.g. support@mealicious.store)
+ * Environment variables:
+ *   SMTP_HOST — mail server hostname (default: mail.mealicious.store)
+ *   SMTP_PORT — submission port (default: 587)
+ *   SMTP_USER — mailbox username (e.g. support@mealicious.store)
+ *   SMTP_PASS — mailbox password
+ *
+ * If SMTP creds are unset, send fails gracefully (returns false) and the
+ * caller decides whether to store the message anyway.
  */
 
-const RESEND_URL = 'https://api.resend.com/emails'
+const SMTP_HOST = process.env.SMTP_HOST || 'mail.mealicious.store'
+const SMTP_PORT = Number(process.env.SMTP_PORT || 587)
+const SMTP_USER = process.env.SMTP_USER || ''
+const SMTP_PASS = process.env.SMTP_PASS || ''
 
-function apiKey() { return process.env.RESEND_API_KEY || '' }
-function fromEmail() { return process.env.FROM_EMAIL || 'Mealicious <support@mealicious.store>' }
-export function isEmailConfigured() { return !!apiKey() }
+export function isEmailConfigured() {
+  return !!(SMTP_HOST && SMTP_USER && SMTP_PASS)
+}
+
+// Singleton transport — pooled connections are reused across sends.
+let transporter: Transporter | null = null
+
+function getTransport(): Transporter {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+      tls: { rejectUnauthorized: false }, // self-signed certs on private mail servers
+    })
+  }
+  return transporter
+}
 
 interface EmailPayload {
   to: string
   subject: string
   html: string
-  /** Override the sender address (e.g. contact@ / feedback@ mailboxes). Must be on a verified domain. */
+  /** The company mailbox to send from (support@ / contact@ / feedback@). Must have SMTP creds matching SMTP_USER or be an alias on the same account. */
   fromOverride?: string
 }
 
 export async function sendEmail({ to, subject, html, fromOverride }: EmailPayload): Promise<boolean> {
   if (!isEmailConfigured()) {
-    console.log('[email] Not configured, skipping send to', to)
+    console.log('[email] SMTP not configured (SMTP_USER/SMTP_PASS), skipping send to', to)
     return false
   }
-  const from = fromOverride ? `Mealicious <${fromOverride}>` : fromEmail()
+  const from = fromOverride || SMTP_USER
   try {
-    const res = await fetch(RESEND_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey()}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ from, to: [to], subject, html }),
-    })
-    if (!res.ok) {
-      console.error('[email] Send failed:', res.status, await res.text())
-      return false
-    }
+    await getTransport().sendMail({ from, to, subject, html })
     return true
   } catch (e) {
-    console.error('[email] Error:', e)
+    console.error('[email] SMTP send failed:', e instanceof Error ? e.message : e)
     return false
   }
 }

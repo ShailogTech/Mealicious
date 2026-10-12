@@ -63,6 +63,23 @@ export function MailInboxClient({ mails: initialMails }: { mails: MailItem[] }) 
   const [fSubject, setFSubject] = useState('')
   const [fBody, setFBody] = useState('')
   const [fCategory, setFCategory] = useState('General')
+  const [fMailbox, setFMailbox] = useState('support@mealicious.store')
+  const [syncing, setSyncing] = useState(false)
+
+  async function handleSync() {
+    setSyncing(true)
+    try {
+      const res = await fetch('/api/administrator/mail-inbox/sync', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error || 'Sync failed'); return }
+      if (data.totalFetched > 0) {
+        toast.success(`${data.totalFetched} new mail${data.totalFetched === 1 ? '' : 's'} fetched`)
+        window.location.reload()
+      } else {
+        toast.success('No new mail')
+      }
+    } catch { toast.error('Sync failed') } finally { setSyncing(false) }
+  }
 
   const counts = useMemo(() => ({
     inbox: mails.length,
@@ -130,10 +147,12 @@ export function MailInboxClient({ mails: initialMails }: { mails: MailItem[] }) 
     try {
       const res = await fetch('/api/administrator/mail-inbox', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ toEmail: fTo, subject: fSubject, body: fBody, category: fCategory }),
+        body: JSON.stringify({ toEmail: fTo, subject: fSubject, body: fBody, category: fCategory, fromMailbox: fMailbox }),
       })
       if (res.ok) {
-        const { mail } = await res.json()
+        const { mail, delivered } = await res.json()
+        if (!delivered) toast.warning('Saved to outbox — email sending not configured (set SMTP_USER/SMTP_PASS)')
+        else toast.success('Message sent')
         setMails((ms) => [
           {
             id: mail.id, toEmail: mail.toEmail, fromEmail: mail.fromEmail, fromName: mail.fromName,
@@ -142,7 +161,6 @@ export function MailInboxClient({ mails: initialMails }: { mails: MailItem[] }) 
           },
           ...ms,
         ])
-        toast.success('Message sent')
         setComposeOpen(false)
         setFTo(''); setFSubject(''); setFBody(''); setFCategory('General')
       } else {
@@ -166,9 +184,14 @@ export function MailInboxClient({ mails: initialMails }: { mails: MailItem[] }) 
         title="Mail Inbox"
         description="Unified inbox for support@, contact@ and feedback@ — read, star, reply and compose."
         action={
-          <Button onClick={() => setComposeOpen(true)}>
-            <SquarePen className="h-4 w-4" /> Compose
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleSync} disabled={syncing}>
+              <Inbox className="h-4 w-4" /> {syncing ? 'Syncing…' : 'Sync Mail'}
+            </Button>
+            <Button onClick={() => setComposeOpen(true)}>
+              <SquarePen className="h-4 w-4" /> Compose
+            </Button>
+          </div>
         }
       />
 
@@ -306,6 +329,17 @@ export function MailInboxClient({ mails: initialMails }: { mails: MailItem[] }) 
         <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Compose</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label>From (company mailbox)</Label>
+              <Select value={fMailbox} onValueChange={setFMailbox}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="support@mealicious.store">support@mealicious.store</SelectItem>
+                  <SelectItem value="contact@mealicious.store">contact@mealicious.store</SelectItem>
+                  <SelectItem value="feedback@mealicious.store">feedback@mealicious.store</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-1.5">
               <Label>To <span className="text-red-500">*</span></Label>
               <Input value={fTo} onChange={(e) => setFTo(e.target.value)} placeholder="e.g. customer@example.com" />
