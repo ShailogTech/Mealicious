@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react'
 import { useTheme } from 'next-themes'
 import { useAppStore, type Page } from '@/lib/store'
 import { Button } from '@/components/ui/button'
@@ -78,8 +78,10 @@ export default function Header() {
   // Theme toggle — mounted guard avoids hydration mismatch (next-themes
   // resolves the actual theme only on the client).
   const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  // Hydration-safe client detection (no effect needed — avoids the
+  // setState-in-effect lint rule).
+  const emptySubscribe = () => () => {}
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false)
 
   // Smooth crossfade: enable the global transition class for one animation
   // cycle, then remove it so hover transitions stay snappy afterwards.
