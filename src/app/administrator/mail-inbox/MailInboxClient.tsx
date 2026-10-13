@@ -67,17 +67,28 @@ export function MailInboxClient({ mails: initialMails }: { mails: MailItem[] }) 
   const [syncing, setSyncing] = useState(false)
 
   async function handleSync() {
+    // The IMAP poll can outlive the HTTP request (Cloudflare 100s limit), so
+    // it runs in the background on the server — kick it off, then poll the
+    // status endpoint until it finishes.
     setSyncing(true)
     try {
       const res = await fetch('/api/administrator/mail-inbox/sync', { method: 'POST' })
       const data = await res.json()
-      if (!res.ok) { toast.error(data.error || 'Sync failed'); return }
-      if (data.totalFetched > 0) {
-        toast.success(`${data.totalFetched} new mail${data.totalFetched === 1 ? '' : 's'} fetched`)
-        window.location.reload()
-      } else {
-        toast.success('No new mail')
+      if (!res.ok) { toast.error(data.error || 'Sync failed'); setSyncing(false); return }
+      toast.success('Sync started — fetching from mail server…')
+
+      // Poll status until the background run finishes (max ~90s).
+      for (let i = 0; i < 18; i++) {
+        await new Promise((r) => setTimeout(r, 5000))
+        const statusRes = await fetch('/api/administrator/mail-inbox/sync')
+        if (!statusRes.ok) break
+        const status = await statusRes.json()
+        if (!status.running) {
+          window.location.reload()
+          return
+        }
       }
+      toast.info('Sync still running — refresh the page in a minute to see new mail.')
     } catch { toast.error('Sync failed') } finally { setSyncing(false) }
   }
 

@@ -35,6 +35,49 @@ export function isMailSyncConfigured() {
   return getMailboxes().length > 0
 }
 
+// ── Background sync state (module-level; survives across requests in the
+// same server process). The IMAP poll can outlive Cloudflare's 100s HTTP
+// limit, so the sync route kicks it off unawaited and the admin checks
+// status instead of holding the request open. ──
+type SyncStatus = {
+  running: boolean
+  startedAt: string | null
+  finishedAt: string | null
+  results: { mailbox: string; fetched: number; error?: string }[]
+}
+
+const syncState: SyncStatus = {
+  running: false,
+  startedAt: null,
+  finishedAt: null,
+  results: [],
+}
+
+export function getSyncStatus(): SyncStatus {
+  return { ...syncState, results: [...syncState.results] }
+}
+
+/** Start a background poll. No-op if one is already running. */
+export function startPoll(): void {
+  if (syncState.running) return
+  syncState.running = true
+  syncState.startedAt = new Date().toISOString()
+  syncState.finishedAt = null
+  syncState.results = []
+
+  pollMailboxes()
+    .then((results) => {
+      syncState.results = results
+    })
+    .catch((e) => {
+      syncState.results = [{ mailbox: '(poll)', fetched: 0, error: e instanceof Error ? e.message : String(e) }]
+    })
+    .finally(() => {
+      syncState.running = false
+      syncState.finishedAt = new Date().toISOString()
+    })
+}
+
 interface FetchedMail {
   toEmail: string
   fromEmail: string
@@ -83,6 +126,8 @@ export async function pollMailboxes(): Promise<{ mailbox: string; fetched: numbe
       tls: { rejectUnauthorized: false }, // tolerate mail server cert until certbot provisions a proper one
       auth: { user: mb.email, pass: mb.password },
       logger: false,
+      greetingTimeout: 15000,
+      socketTimeout: 30000,
     })
 
     try {
