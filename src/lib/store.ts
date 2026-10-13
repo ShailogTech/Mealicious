@@ -91,6 +91,24 @@ interface AppStore {
   setMobileMenuOpen: (open: boolean) => void
 }
 
+// Fire-and-forget CRM activity tracking (POST /api/track). Never blocks or
+// surfaces errors — analytics must not break the storefront.
+export function trackActivity(payload: {
+  activityType: string
+  productId?: string
+  productName?: string
+  metadata?: Record<string, unknown>
+}) {
+  if (typeof window === 'undefined') return
+  const userId = useAppStore.getState().user?.email || 'anonymous'
+  fetch('/api/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, ...payload }),
+    keepalive: true,
+  }).catch(() => {})
+}
+
 export const useAppStore = create<AppStore>()(
   persist(
     (set, get) => ({
@@ -129,13 +147,41 @@ export const useAppStore = create<AppStore>()(
             trackAddToCart({ id: item.productId, name: item.name, price: item.salePrice ?? item.price, quantity: item.quantity })
           ).catch(() => {})
         }
+        // CRM activity log
+        trackActivity({
+          activityType: 'add_to_cart',
+          productId: item.productId,
+          productName: item.name,
+          metadata: {
+            qty: item.quantity,
+            price: item.salePrice ?? item.price,
+            variant: item.variant,
+          },
+        })
       },
       removeFromCart: (productId, variant) => {
+        const key = `${productId}-${variant || 'default'}`
+        const removed = get().cartItems.find(
+          (ci) => `${ci.productId}-${ci.variant || 'default'}` === key
+        )
         set({
           cartItems: get().cartItems.filter(
             (ci) => !(ci.productId === productId && (ci.variant || 'default') === (variant || 'default'))
           ),
         })
+        // CRM activity log
+        if (removed) {
+          trackActivity({
+            activityType: 'remove_from_cart',
+            productId: removed.productId,
+            productName: removed.name,
+            metadata: {
+              qty: removed.quantity,
+              price: removed.salePrice ?? removed.price,
+              variant: removed.variant,
+            },
+          })
+        }
       },
       updateQuantity: (productId, quantity, variant) => {
         if (quantity <= 0) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -43,6 +43,24 @@ export function BillingClient() {
   const [lines, setLines] = useState<Line[]>([{ ...EMPTY_LINE }])
   const [saving, setSaving] = useState(false)
   const [createdInvoice, setCreatedInvoice] = useState<{ invoiceNumber: string; customerName: string; mobile: string | null; grandTotal: number } | null>(null)
+  const [inventoryItems, setInventoryItems] = useState<{ id: string; name: string; price: number; gstPct: number; sku?: string }[]>([])
+
+  // Fetch ERP inventory on mount so the product picker can auto-fill.
+  useEffect(() => {
+    fetch('/api/administrator/inventory').then((r) => r.json()).then((data) => {
+      if (Array.isArray(data.items)) {
+        setInventoryItems(data.items.map((i: Record<string, unknown>) => ({
+          id: String(i.id), name: String(i.name), price: Number(i.price) || 0, gstPct: Number(i.gstPct) || 0,
+        })))
+      }
+    }).catch(() => {})
+  }, [])
+
+  function selectProduct(idx: number, productId: string) {
+    const product = inventoryItems.find((p) => p.id === productId)
+    if (!product) return
+    updateLine(idx, { name: product.name, price: String(product.price), gstPct: String(product.gstPct) })
+  }
 
   const inputs: InvoiceLineInput[] = lines.map((l) => ({
     name: l.name, qty: Number(l.qty) || 0, price: Number(l.price) || 0, disc: Number(l.disc) || 0, gstPct: Number(l.gstPct) || 0,
@@ -143,7 +161,15 @@ export function BillingClient() {
                 <div key={idx} className="grid grid-cols-12 gap-2 items-end">
                   <div className="col-span-12 sm:col-span-4 space-y-1">
                     <Label className="text-xs">Item</Label>
-                    <Input value={l.name} onChange={(e) => updateLine(idx, { name: e.target.value })} placeholder="Item name" />
+                    {inventoryItems.length > 0 && (
+                      <Select onValueChange={(v) => selectProduct(idx, v)}>
+                        <SelectTrigger className="mb-1 text-xs h-8"><SelectValue placeholder="Pick from inventory…" /></SelectTrigger>
+                        <SelectContent>
+                          {inventoryItems.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} · ₹{p.price}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    <Input value={l.name} onChange={(e) => updateLine(idx, { name: e.target.value })} placeholder="Item name (or pick above)" />
                   </div>
                   <div className="col-span-3 sm:col-span-1 space-y-1">
                     <Label className="text-xs">Qty</Label>

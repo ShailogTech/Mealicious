@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface ProductionOrder extends ErpRow {
@@ -36,7 +37,7 @@ const FIELDS: ErpField[] = [
   { key: 'endDate', label: 'Target End Date', type: 'date' },
 ]
 
-export function ManufacturingClient({ productionOrders }: { productionOrders: ProductionOrder[] }) {
+export function ManufacturingClient({ productionOrders, canExport }: { productionOrders: ProductionOrder[]; canExport?: boolean }) {
   const [rows, setRows] = useState<ProductionOrder[]>(productionOrders)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<ProductionOrder | null>(null)
@@ -83,7 +84,7 @@ export function ManufacturingClient({ productionOrders }: { productionOrders: Pr
 
   return (
     <div>
-      <ErpPageHeader title="Manufacturing" description="Production orders across machine lines." />
+      <ErpPageHeader title="Manufacturing" description="Production orders across machine lines." action={<ErpExportButtons model="manufacturing" canExport={!!canExport} />} />
       <ErpDataTable columns={COLUMNS} rows={rows} onAdd={openCreate} onEdit={openEdit} onDelete={handleDelete} addLabel="Add Order" emptyMessage="No production orders yet." />
       <ErpFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editing ? 'Edit Order' : 'Add Order'} fields={FIELDS} initial={editing} onSubmit={handleSubmit} />
     </div>

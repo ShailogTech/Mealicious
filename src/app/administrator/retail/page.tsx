@@ -15,7 +15,7 @@ async function getData() {
 }
 
 export default async function RetailPage() {
-  await requireErpPageUser()
+  const user = await requireErpPageUser()
   const { retail } = await getData()
-  return <RetailClient retail={retail} />
+  return <RetailClient retail={retail} canExport={user.role === 'SUPER_ADMIN'} />
 }

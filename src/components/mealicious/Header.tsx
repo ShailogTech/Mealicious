@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react'
+import { useTheme } from 'next-themes'
 import { useAppStore, type Page } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { PromoBar } from '@/components/mealicious/PromoBar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +26,8 @@ import {
   X,
   Leaf,
   ChevronRight,
+  Sun,
+  Moon,
   LogOut,
   UserCircle,
   Shield,
@@ -71,6 +75,26 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Theme toggle — mounted guard avoids hydration mismatch (next-themes
+  // resolves the actual theme only on the client).
+  const { resolvedTheme, setTheme } = useTheme()
+  // Hydration-safe client detection (no effect needed — avoids the
+  // setState-in-effect lint rule).
+  const emptySubscribe = () => () => {}
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false)
+
+  // Smooth crossfade: enable the global transition class for one animation
+  // cycle, then remove it so hover transitions stay snappy afterwards.
+  const toggleTheme = useCallback(() => {
+    // Use a data attribute, NOT a class — next-themes replaces the html
+    // element's entire className on every setTheme, which wipes any class
+    // we add. Data attributes survive.
+    const html = document.documentElement
+    html.dataset.themeTransition = 'on'
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+    window.setTimeout(() => html.removeAttribute('data-theme-transition'), 450)
+  }, [resolvedTheme, setTheme])
+
   // Sync local search state with store
   useEffect(() => {
     const handle = requestAnimationFrame(() => {
@@ -114,17 +138,15 @@ export default function Header() {
 
   return (
     <>
-      {/* Announcement Bar */}
-      <div className="bg-stone-900 text-white text-xs py-2 px-4 text-center font-medium select-none tracking-wide">
-        🎉 Free shipping on orders above ₹499! | Get 10% EXTRA discount on all Prepaid Orders!
-      </div>
+      {/* Dynamic Promo Bar — shows live offers (BOGO/Free Gift/Free Shipping) */}
+      <PromoBar />
 
       {/* Main Header */}
       <header
         className={`sticky top-0 z-40 w-full transition-all duration-300 ${
           scrolled
-            ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-gray-100'
-            : 'bg-white backdrop-blur-sm border-b border-gray-100'
+            ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-border'
+            : 'bg-background backdrop-blur-sm border-b border-border'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -136,7 +158,7 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="mr-2 text-gray-700 hover:text-orange-400 hover:bg-blue-50"
+                    className="mr-2 text-foreground hover:text-primary hover:bg-accent"
                     aria-label="Open menu"
                   >
                     <Menu className="h-5 w-5" />
@@ -145,9 +167,9 @@ export default function Header() {
                 <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0">
                   <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                   {/* Mobile Menu Header */}
-                  <div className="flex items-center gap-2 px-6 py-5 border-b border-gray-100 bg-blue-50">
-                    <Leaf className="h-6 w-6 text-orange-400" />
-                    <span className="text-xl font-bold text-orange-400 tracking-tight">
+                  <div className="flex items-center gap-2 px-6 py-5 border-b border-border bg-accent">
+                    <Leaf className="h-6 w-6 text-primary" />
+                    <span className="text-xl font-bold text-primary tracking-tight">
                       MEALICIOUS
                     </span>
                   </div>
@@ -160,8 +182,8 @@ export default function Header() {
                         onClick={() => handleNavClick(link.page)}
                         className={`flex items-center justify-between px-6 py-3.5 text-sm font-medium transition-colors ${
                           isActivePage(link.page)
-                            ? 'text-orange-400 bg-blue-50 border-r-3 border-orange-400'
-                            : 'text-gray-700 hover:text-orange-400 hover:bg-blue-50/50'
+                            ? 'text-primary bg-accent border-r-3 border-primary'
+                            : 'text-foreground hover:text-primary hover:bg-accent'
                         }`}
                       >
                         <span>{link.label}</span>
@@ -171,39 +193,39 @@ export default function Header() {
                   </nav>
 
                   {/* Mobile Menu Footer */}
-                  <div className="border-t border-gray-100 px-6 py-4 space-y-3 mt-auto">
+                  <div className="border-t border-border px-6 py-4 space-y-3 mt-auto">
                     {isLoggedIn && user ? (
                       <div className="space-y-3">
                         <div className="flex items-center gap-3 py-2">
-                          <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
-                            <User className="h-4 w-4 text-orange-400" />
+                          <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center">
+                            <User className="h-4 w-4 text-primary" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                            <p className="text-xs text-gray-500">{user.email}</p>
+                            <p className="text-sm font-medium text-foreground">{user.name}</p>
+                            <p className="text-xs text-muted-foreground">{user.email}</p>
                           </div>
                         </div>
                         <button
                           onClick={() => handleNavClick('profile')}
-                          className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:text-orange-400 hover:bg-blue-50 rounded-md transition-colors"
+                          className="w-full text-left px-3 py-2.5 text-sm text-foreground hover:text-primary hover:bg-accent rounded-md transition-colors"
                         >
                           My Profile
                         </button>
                         {user.role === 'admin' && (
                           <button
                             onClick={openAdminPanel}
-                            className="w-full text-left px-3 py-2.5 text-sm font-semibold text-orange-500 hover:bg-orange-50 rounded-md transition-colors"
+                            className="w-full text-left px-3 py-2.5 text-sm font-semibold text-primary hover:bg-orange-50 rounded-md transition-colors"
                           >
                             Admin Panel
                           </button>
                         )}
                         <button
                           onClick={() => handleNavClick('wishlist')}
-                          className="w-full text-left px-3 py-2.5 text-sm text-gray-700 hover:text-orange-400 hover:bg-blue-50 rounded-md transition-colors flex items-center justify-between"
+                          className="w-full text-left px-3 py-2.5 text-sm text-foreground hover:text-primary hover:bg-accent rounded-md transition-colors flex items-center justify-between"
                         >
                           <span>Wishlist</span>
                           {wishlistCount > 0 && (
-                            <Badge className="bg-orange-400 text-white text-[10px] h-5 min-w-[20px] px-1.5">
+                            <Badge className="bg-primary text-white text-[10px] h-5 min-w-[20px] px-1.5">
                               {wishlistCount}
                             </Badge>
                           )}
@@ -223,14 +245,14 @@ export default function Header() {
                       <div className="space-y-2">
                         <Button
                           onClick={() => handleNavClick('login')}
-                          className="w-full bg-orange-400 hover:bg-orange-400 text-white"
+                          className="w-full bg-primary hover:bg-primary text-white"
                         >
                           Sign In
                         </Button>
                         <Button
                           onClick={() => handleNavClick('register')}
                           variant="outline"
-                          className="w-full border-orange-400 text-orange-400 hover:bg-blue-50"
+                          className="w-full border-primary text-primary hover:bg-accent"
                         >
                           Create Account
                         </Button>
@@ -248,13 +270,13 @@ export default function Header() {
               aria-label="Go to homepage"
             >
               <div className="relative">
-                <Leaf className="h-7 w-7 text-orange-400 group-hover:text-orange-400 transition-colors" />
+                <Leaf className="h-7 w-7 text-primary group-hover:text-primary transition-colors" />
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-lg sm:text-xl font-extrabold tracking-tight text-gray-900 group-hover:text-orange-400 transition-colors">
+                <span className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground group-hover:text-primary transition-colors">
                   MEALICIOUS
                 </span>
-                <span className="text-[9px] sm:text-[10px] font-medium text-orange-400 tracking-[0.15em] uppercase">
+                <span className="text-[9px] sm:text-[10px] font-medium text-primary tracking-[0.15em] uppercase">
                   Store
                 </span>
               </div>
@@ -268,13 +290,13 @@ export default function Header() {
                   onClick={() => handleNavClick(link.page)}
                   className={`relative px-3 py-2 text-sm font-medium transition-colors rounded-md ${
                     isActivePage(link.page)
-                      ? 'text-orange-400 bg-blue-50'
-                      : 'text-gray-600 hover:text-orange-400 hover:bg-blue-50/50'
+                      ? 'text-primary bg-accent'
+                      : 'text-muted-foreground hover:text-primary hover:bg-accent'
                   }`}
                 >
                   {link.label}
                   {isActivePage(link.page) && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 bg-orange-400 rounded-full" />
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 bg-primary rounded-full" />
                   )}
                 </button>
               ))}
@@ -290,13 +312,13 @@ export default function Header() {
                     className="flex items-center gap-2 animate-in slide-in-from-right-5 duration-200"
                   >
                     <div className="relative">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/70" />
                       <Input
                         type="text"
                         placeholder="Search products..."
                         value={localSearch}
                         onChange={(e) => setLocalSearch(e.target.value)}
-                        className="w-40 sm:w-56 h-9 pl-8 pr-3 text-sm border-blue-200 focus:border-blue-400 focus:ring-blue-400/20"
+                        className="w-40 sm:w-56 h-9 pl-8 pr-3 text-sm border-border focus:border-primary focus:ring-primary/20"
                         autoFocus
                       />
                     </div>
@@ -304,7 +326,7 @@ export default function Header() {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-9 w-9 text-gray-500 hover:text-gray-700 shrink-0"
+                      className="h-9 w-9 text-muted-foreground hover:text-foreground shrink-0"
                       onClick={handleSearchClose}
                       aria-label="Close search"
                     >
@@ -315,7 +337,7 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                    className="text-muted-foreground hover:text-primary hover:bg-accent h-9 w-9 sm:h-10 sm:w-10"
                     onClick={() => setSearchOpen(true)}
                     aria-label="Open search"
                   >
@@ -324,28 +346,44 @@ export default function Header() {
                 )}
               </div>
 
-              {/* Notifications */}
+              {/* Theme toggle (dark / light) */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                className="relative text-muted-foreground hover:text-primary hover:bg-accent h-9 w-9 sm:h-10 sm:w-10"
+                onClick={toggleTheme}
+                aria-label="Toggle theme"
+              >
+                {/* Render icon only after mount to avoid hydration mismatch */}
+                {mounted && resolvedTheme === 'dark' ? (
+                  <Sun className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+                ) : (
+                  <Moon className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
+                )}
+              </Button>
+
+              {/* Notifications — hidden on mobile (lives in the mobile menu) */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative hidden sm:inline-flex text-muted-foreground hover:text-primary hover:bg-accent h-9 w-9 sm:h-10 sm:w-10"
                 onClick={() => handleNavClick('notifications')}
                 aria-label="Notifications"
               >
                 <Bell className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
               </Button>
 
-              {/* Wishlist */}
+              {/* Wishlist — hidden on mobile (lives in the mobile menu) */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                className="relative hidden sm:inline-flex text-muted-foreground hover:text-primary hover:bg-accent h-9 w-9 sm:h-10 sm:w-10"
                 onClick={() => handleNavClick('wishlist')}
                 aria-label="Wishlist"
               >
                 <Heart className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
                 {wishlistCount > 0 && (
-                  <Badge className="absolute -top-0.5 -right-0.5 bg-orange-400 text-white text-[10px] h-4 min-w-[16px] px-1 flex items-center justify-center border-0">
+                  <Badge className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[10px] h-4 min-w-[16px] px-1 flex items-center justify-center border-0">
                     {wishlistCount}
                   </Badge>
                 )}
@@ -355,13 +393,13 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                className="relative text-muted-foreground hover:text-primary hover:bg-accent h-9 w-9 sm:h-10 sm:w-10"
                 onClick={() => setCartOpen(true)}
                 aria-label="Shopping cart"
               >
                 <ShoppingCart className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
                 {cartCount > 0 && (
-                  <Badge className="absolute -top-0.5 -right-0.5 bg-orange-400 text-white text-[10px] h-4 min-w-[16px] px-1 flex items-center justify-center border-0">
+                  <Badge className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[10px] h-4 min-w-[16px] px-1 flex items-center justify-center border-0">
                     {cartCount}
                   </Badge>
                 )}
@@ -374,11 +412,11 @@ export default function Header() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="relative text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                      className="relative text-muted-foreground hover:text-primary hover:bg-accent h-9 w-9 sm:h-10 sm:w-10"
                       aria-label="Account menu"
                     >
-                      <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                        <span className="text-xs sm:text-sm font-semibold text-orange-400">
+                      <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-accent flex items-center justify-center">
+                        <span className="text-xs sm:text-sm font-semibold text-primary">
                           {user?.name?.charAt(0).toUpperCase() || 'U'}
                         </span>
                       </div>
@@ -402,7 +440,7 @@ export default function Header() {
                     {user?.role === 'admin' && (
                       <DropdownMenuItem
                         onClick={openAdminPanel}
-                        className="cursor-pointer font-semibold text-orange-500 focus:text-orange-500"
+                        className="cursor-pointer font-semibold text-primary focus:text-primary"
                       >
                         <Shield className="mr-2 h-4 w-4" />
                         <span>Admin Panel</span>
@@ -415,7 +453,7 @@ export default function Header() {
                       <Heart className="mr-2 h-4 w-4" />
                       <span>Wishlist</span>
                       {wishlistCount > 0 && (
-                        <Badge className="ml-auto bg-orange-400 text-white text-[10px] h-5 min-w-[20px] px-1.5 border-0">
+                        <Badge className="ml-auto bg-primary text-white text-[10px] h-5 min-w-[20px] px-1.5 border-0">
                           {wishlistCount}
                         </Badge>
                       )}
@@ -434,7 +472,7 @@ export default function Header() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-gray-600 hover:text-orange-400 hover:bg-blue-50 h-9 w-9 sm:h-10 sm:w-10"
+                  className="text-muted-foreground hover:text-primary hover:bg-accent h-9 w-9 sm:h-10 sm:w-10"
                   onClick={() => handleNavClick('login')}
                   aria-label="Sign in"
                 >

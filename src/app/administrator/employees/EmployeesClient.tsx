@@ -15,7 +15,7 @@ import {
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
-import { ErpExportButton } from '@/components/administrator/ErpExportButton'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import { ERP_MODULES } from '@/lib/administrator/modules'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
@@ -97,7 +97,7 @@ const FIELDS: ErpField[] = [
   { key: 'bankBranch', label: 'Branch', type: 'text', section: 'Bank' },
 ]
 
-export function EmployeesClient({ employees, canExport }: { employees: Employee[]; canExport?: boolean }) {
+export function EmployeesClient({ employees, canExport, canManageAccess }: { employees: Employee[]; canExport?: boolean; canManageAccess?: boolean }) {
   const [rows, setRows] = useState<Employee[]>(employees)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Employee | null>(null)
@@ -238,7 +238,7 @@ export function EmployeesClient({ employees, canExport }: { employees: Employee[
       <ErpPageHeader
         title="Employees / HRMS"
         description="Manage employee records, logins, and discipline."
-        action={<ErpExportButton model="employees" canExport={!!canExport} />}
+        action={<ErpExportButtons model="employees" canExport={!!canExport} />}
       />
 
       <ErpDataTable
@@ -275,18 +275,20 @@ export function EmployeesClient({ employees, canExport }: { employees: Employee[
         </div>
       </div>
 
-      {/* Module access override — per-employee checklist of module keys */}
-      <div className="mt-4">
-        <p className="text-xs text-stone-500 mb-2">Module access overrides (grants additional modules on top of role):</p>
-        <div className="flex flex-wrap gap-2">
-          {rows.map((emp) => (
-            <Button key={emp.id} variant="outline" size="sm" className="h-7 text-xs"
-              onClick={() => openAccess(emp)}>
-              {emp.name}
-            </Button>
-          ))}
+      {/* Module access override — Super Admin only */}
+      {canManageAccess && (
+        <div className="mt-4">
+          <p className="text-xs text-stone-500 mb-2">Module access overrides (grants additional modules on top of role):</p>
+          <div className="flex flex-wrap gap-2">
+            {rows.map((emp) => (
+              <Button key={emp.id} variant="outline" size="sm" className="h-7 text-xs"
+                onClick={() => openAccess(emp)}>
+                {emp.name}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Create-Login credentials dialog (shown once) */}
       <Dialog open={!!creds} onOpenChange={(o) => !o && setCreds(null)}>

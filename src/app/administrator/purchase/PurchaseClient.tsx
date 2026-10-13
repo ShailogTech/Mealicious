@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface PurchaseOrder extends ErpRow {
@@ -27,7 +28,7 @@ const FIELDS: ErpField[] = [
   { key: 'date', label: 'Date', type: 'date' },
 ]
 
-export function PurchaseClient({ purchaseOrders }: { purchaseOrders: PurchaseOrder[] }) {
+export function PurchaseClient({ purchaseOrders, canExport }: { purchaseOrders: PurchaseOrder[]; canExport?: boolean }) {
   const [rows, setRows] = useState<PurchaseOrder[]>(purchaseOrders)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<PurchaseOrder | null>(null)
@@ -67,7 +68,7 @@ export function PurchaseClient({ purchaseOrders }: { purchaseOrders: PurchaseOrd
 
   return (
     <div>
-      <ErpPageHeader title="Purchase Orders" description="Orders raised against vendors." />
+      <ErpPageHeader title="Purchase Orders" description="Orders raised against vendors." action={<ErpExportButtons model="purchase" canExport={!!canExport} />} />
       <ErpDataTable columns={COLUMNS} rows={rows} onAdd={openCreate} onEdit={openEdit} onDelete={handleDelete} addLabel="Add Order" emptyMessage="No purchase orders yet." />
       <ErpFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editing ? 'Edit Order' : 'Add Order'} fields={FIELDS} initial={editing} onSubmit={handleSubmit} />
     </div>

@@ -218,6 +218,39 @@ export async function buildInvoicePdfBlob(invoice: PdfInvoice, company: PdfCompa
     doc.text(company.footerText, pageW / 2, pageH - 40, { align: 'center' })
   }
 
+  // ── Premium branded footer ────────────────────────────────────────────────
+  // A dashed-border block with a thank-you note, review request, and the
+  // website/socials. Positioned above the letterhead's bottom artwork so it
+  // never collides with the pre-printed footer band.
+  const footerW = contentW
+  const footerH = 58
+  const footerX = marginL
+  // Clamp the footer below the totals/terms; never below the letterhead band.
+  const footerY = Math.min(y + 14, pageH - 130)
+
+  // Subtle dashed border around the footer block.
+  doc.setDrawColor(180, 150, 110) // warm tan, matches the letterhead rule
+  doc.setLineWidth(0.6)
+  doc.setLineDashPattern([3, 2], 0)
+  doc.rect(footerX, footerY, footerW, footerH)
+  doc.setLineDashPattern([], 0)
+
+  let fy = footerY + 16
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9.5)
+  doc.setTextColor(30, 30, 30)
+  doc.text('Thank you for your purchase! We appreciate your business.', pageW / 2, fy, { align: 'center' })
+  fy += 14
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8.5)
+  doc.setTextColor(90, 90, 90)
+  doc.text('Loved your order? Leave us a review: https://mealicious.store/shop', pageW / 2, fy, { align: 'center' })
+  fy += 14
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(150, 100, 40)
+  doc.text('Visit us at www.mealicious.store  ·  Follow us @mealicious', pageW / 2, fy, { align: 'center' })
+
   return doc.output('blob')
 }
 

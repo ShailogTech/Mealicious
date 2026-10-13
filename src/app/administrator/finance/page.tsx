@@ -20,7 +20,7 @@ async function getData() {
 }
 
 export default async function FinancePage() {
-  await requireErpPageUser()
+  const user = await requireErpPageUser()
   const { transactions } = await getData()
-  return <FinanceClient transactions={transactions} />
+  return <FinanceClient transactions={transactions} canExport={user.role === 'SUPER_ADMIN'} />
 }

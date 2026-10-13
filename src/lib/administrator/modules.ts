@@ -79,6 +79,13 @@ export const ERP_MODULES: ErpModule[] = [
     icon: 'mail',
   },
   {
+    key: 'mailinbox',
+    label: 'Mail Inbox',
+    section: 'People & Operations',
+    href: '/administrator/mail-inbox',
+    icon: 'mailinbox',
+  },
+  {
     key: 'crm',
     label: 'CRM / Leads',
     section: 'People & Operations',
@@ -98,6 +105,13 @@ export const ERP_MODULES: ErpModule[] = [
     section: 'People & Operations',
     href: '/administrator/billing',
     icon: 'file',
+  },
+  {
+    key: 'wholesale',
+    label: 'Wholesale Invoices',
+    section: 'People & Operations',
+    href: '/administrator/wholesale',
+    icon: 'wholesale',
   },
   {
     key: 'purchase',
@@ -205,6 +219,13 @@ export const ERP_MODULES: ErpModule[] = [
     icon: 'wrench',
   },
   {
+    key: 'emailmanagement',
+    label: 'Email Management',
+    section: 'Network',
+    href: '/administrator/email-management',
+    icon: 'emailmanagement',
+  },
+  {
     key: 'companysettings',
     label: 'Company Settings',
     section: 'Network',
@@ -217,6 +238,34 @@ export const ERP_MODULES: ErpModule[] = [
     section: 'Network',
     href: '/administrator/documents',
     icon: 'folder',
+  },
+  {
+    key: 'marketing',
+    label: 'Marketing Department',
+    section: 'Network',
+    href: '/administrator/marketing',
+    icon: 'megaphone',
+  },
+  {
+    key: 'financedept',
+    label: 'Finance Department',
+    section: 'Network',
+    href: '/administrator/finance-dept',
+    icon: 'chart',
+  },
+  {
+    key: 'expenses',
+    label: 'Expense Monitoring',
+    section: 'Network',
+    href: '/administrator/expenses',
+    icon: 'expenses',
+  },
+  {
+    key: 'bankaccounts',
+    label: 'Bank Accounts',
+    section: 'Network',
+    href: '/administrator/bank-accounts',
+    icon: 'bankaccounts',
   },
 ]
 

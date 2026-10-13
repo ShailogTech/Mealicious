@@ -35,11 +35,17 @@ services:
       PORT: 3000
       HOSTNAME: 0.0.0.0
       DATABASE_URL: postgresql://mealicious:${POSTGRES_PASSWORD}@mealicious-db:5432/mealicious?schema=public
+      # Mail server: reach the iRedMail container directly on its network
+      # (container-to-container avoids Docker cross-bridge isolation that
+      # blocks the app from reaching host-published mail ports).
+      SMTP_HOST: iredmail
+      IMAP_HOST: iredmail
     depends_on:
       mealicious-db:
         condition: service_healthy
     networks:
       - mealicious-net
+      - iredmail-net
 
 volumes:
   mealicious-pgdata:
@@ -47,3 +53,7 @@ volumes:
 networks:
   mealicious-net:
     driver: bridge
+  # iRedMail's existing network (external — defined in /root/iredmail-ijrnexus)
+  iredmail-net:
+    external: true
+    name: iredmail-ijrnexus_default

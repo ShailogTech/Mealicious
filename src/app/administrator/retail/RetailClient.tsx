@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface RetailStore extends ErpRow {
@@ -30,7 +31,7 @@ const FIELDS: ErpField[] = [
   { key: 'status', label: 'Status', type: 'select', options: STATUSES },
 ]
 
-export function RetailClient({ retail }: { retail: RetailStore[] }) {
+export function RetailClient({ retail, canExport }: { retail: RetailStore[]; canExport?: boolean }) {
   const [rows, setRows] = useState<RetailStore[]>(retail)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<RetailStore | null>(null)
@@ -64,7 +65,7 @@ export function RetailClient({ retail }: { retail: RetailStore[] }) {
 
   return (
     <div>
-      <ErpPageHeader title="Retail Stores" description="Company-owned retail outlets." />
+      <ErpPageHeader title="Retail Stores" description="Company-owned retail outlets." action={<ErpExportButtons model="retail" canExport={!!canExport} />} />
       <ErpDataTable columns={COLUMNS} rows={rows} onAdd={openCreate} onEdit={openEdit} onDelete={handleDelete} addLabel="Add Store" emptyMessage="No retail stores yet." />
       <ErpFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editing ? 'Edit Store' : 'Add Store'} fields={FIELDS} initial={editing} onSubmit={handleSubmit} />
     </div>

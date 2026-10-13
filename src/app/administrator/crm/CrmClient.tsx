@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Lead extends ErpRow {
@@ -29,7 +30,7 @@ const FIELDS: ErpField[] = [
   { key: 'owner', label: 'Owner', type: 'text' },
 ]
 
-export function CrmClient({ leads }: { leads: Lead[] }) {
+export function CrmClient({ leads, canExport }: { leads: Lead[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Lead[]>(leads)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Lead | null>(null)
@@ -63,7 +64,7 @@ export function CrmClient({ leads }: { leads: Lead[] }) {
 
   return (
     <div>
-      <ErpPageHeader title="CRM / Leads" description="Sales pipeline contacts and deal stages." />
+      <ErpPageHeader title="CRM / Leads" description="Sales pipeline contacts and deal stages." action={<ErpExportButtons model="crm" canExport={!!canExport} />} />
       <ErpDataTable columns={COLUMNS} rows={rows} onAdd={openCreate} onEdit={openEdit} onDelete={handleDelete} addLabel="Add Lead" emptyMessage="No leads yet." />
       <ErpFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editing ? 'Edit Lead' : 'Add Lead'} fields={FIELDS} initial={editing} onSubmit={handleSubmit} />
     </div>

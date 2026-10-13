@@ -23,5 +23,21 @@ export async function POST(req: NextRequest) {
       status: body.status || 'Pending Approval',
     },
   })
+
+  // Auto-create a matching Expense entry (mirrors the invoice→income pattern).
+  const poAmount = Number(body.amount) || 0
+  if (poAmount > 0) {
+    await db.erpTransaction.create({
+      data: {
+        date: body.date ? new Date(body.date) : new Date(),
+        type: 'Expense',
+        category: `Purchase Order: ${vendor}`,
+        amount: poAmount,
+        account: 'Axis Bank - Current',
+        note: `PO auto-entry`,
+      },
+    })
+  }
+
   return NextResponse.json({ purchaseOrder: created })
 }

@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Shift extends ErpRow {
@@ -31,7 +32,7 @@ const FIELDS: ErpField[] = [
   { key: 'type', label: 'Type', type: 'select', options: TYPES },
 ]
 
-export function ShiftsClient({ shifts }: { shifts: Shift[] }) {
+export function ShiftsClient({ shifts, canExport }: { shifts: Shift[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Shift[]>(shifts)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Shift | null>(null)
@@ -73,7 +74,7 @@ export function ShiftsClient({ shifts }: { shifts: Shift[] }) {
 
   return (
     <div>
-      <ErpPageHeader title="Work Schedules" description="Shift templates used across departments." />
+      <ErpPageHeader title="Work Schedules" description="Shift templates used across departments." action={<ErpExportButtons model="shifts" canExport={!!canExport} />} />
       <ErpDataTable
         columns={COLUMNS}
         rows={rows}

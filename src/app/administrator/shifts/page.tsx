@@ -22,7 +22,7 @@ async function getData() {
 }
 
 export default async function ShiftsPage() {
-  await requireErpPageUser()
+  const user = await requireErpPageUser()
   const { shifts } = await getData()
-  return <ShiftsClient shifts={shifts} />
+  return <ShiftsClient shifts={shifts} canExport={user.role === 'SUPER_ADMIN'} />
 }

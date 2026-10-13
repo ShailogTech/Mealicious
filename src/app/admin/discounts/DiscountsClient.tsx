@@ -28,12 +28,14 @@ interface Discount {
   description: string
 }
 
-const TYPES = ['prepaid', 'percent', 'flat']
+const TYPES = ['prepaid', 'percent', 'flat', 'bogo', 'freegift']
 
 const TYPE_LABEL: Record<string, string> = {
   prepaid: 'Prepaid (auto, online)',
   percent: 'Coupon (% off)',
   flat: 'Coupon (₹ off)',
+  bogo: 'BOGO (Buy 1 Get 1 Free)',
+  freegift: 'Free Gift (auto with min order)',
 }
 
 function formatValue(d: Discount): string {

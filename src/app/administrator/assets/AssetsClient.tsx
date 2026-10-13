@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Asset extends ErpRow {
@@ -31,7 +32,7 @@ const FIELDS: ErpField[] = [
   { key: 'warrantyExpiry', label: 'Warranty Expiry', type: 'date' },
 ]
 
-export function AssetsClient({ assets }: { assets: Asset[] }) {
+export function AssetsClient({ assets, canExport }: { assets: Asset[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Asset[]>(assets)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Asset | null>(null)
@@ -76,7 +77,7 @@ export function AssetsClient({ assets }: { assets: Asset[] }) {
 
   return (
     <div>
-      <ErpPageHeader title="Assets" description="Company assets with assignment and warranty tracking." />
+      <ErpPageHeader title="Assets" description="Company assets with assignment and warranty tracking." action={<ErpExportButtons model="assets" canExport={!!canExport} />} />
       <ErpDataTable columns={COLUMNS} rows={rows} onAdd={openCreate} onEdit={openEdit} onDelete={handleDelete} addLabel="Add Asset" emptyMessage="No assets recorded yet." />
       <ErpFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editing ? 'Edit Asset' : 'Add Asset'} fields={FIELDS} initial={editing} onSubmit={handleSubmit} />
     </div>

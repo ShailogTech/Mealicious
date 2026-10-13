@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { ErpPageHeader } from '@/components/administrator/ErpPageHeader'
 import { ErpDataTable } from '@/components/administrator/ErpDataTable'
 import { ErpFormDrawer } from '@/components/administrator/ErpFormDrawer'
+import { ErpExportButtons } from '@/components/administrator/ErpExportButtons'
 import type { ErpColumn, ErpField, ErpRow } from '@/components/administrator/erp-crud-types'
 
 interface Sale extends ErpRow {
@@ -32,7 +33,7 @@ const FIELDS: ErpField[] = [
   { key: 'status', label: 'Status', type: 'select', options: STATUSES },
 ]
 
-export function SalesClient({ sales }: { sales: Sale[] }) {
+export function SalesClient({ sales, canExport }: { sales: Sale[]; canExport?: boolean }) {
   const [rows, setRows] = useState<Sale[]>(sales)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<Sale | null>(null)
@@ -66,7 +67,7 @@ export function SalesClient({ sales }: { sales: Sale[] }) {
 
   return (
     <div>
-      <ErpPageHeader title="Sales & POS" description="Sales orders across all channels." />
+      <ErpPageHeader title="Sales & POS" description="Sales orders across all channels." action={<ErpExportButtons model="sales" canExport={!!canExport} />} />
       <ErpDataTable columns={COLUMNS} rows={rows} onAdd={openCreate} onEdit={openEdit} onDelete={handleDelete} addLabel="Add Sale" emptyMessage="No sales recorded yet." />
       <ErpFormDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editing ? 'Edit Sale' : 'Add Sale'} fields={FIELDS} initial={editing} onSubmit={handleSubmit} />
     </div>

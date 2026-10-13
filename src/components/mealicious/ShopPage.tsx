@@ -178,7 +178,7 @@ function FilterSidebar({
               <Checkbox
                 checked={selectedCategories.includes(cat.slug)}
                 onCheckedChange={() => onToggleCategory(cat.slug)}
-                className="data-[state=checked]:bg-orange-400 data-[state=checked]:border-orange-400"
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors flex-1">
                 {cat.name}
@@ -203,7 +203,7 @@ function FilterSidebar({
             step={50}
             value={priceRange}
             onValueChange={(val) => onSetPriceRange(val as [number, number])}
-            className="mb-4 [&_[data-slot=slider-range]]:bg-orange-400 [&_[data-slot=slider-thumb]]:border-orange-400"
+            className="mb-4 [&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:border-primary"
           />
           <div className="flex items-center gap-3">
             <div className="flex-1">
@@ -252,7 +252,7 @@ function FilterSidebar({
               onClick={() => onSetMinRating(minRating === rating ? 0 : rating)}
               className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm transition-colors ${
                 minRating === rating
-                  ? 'bg-blue-50 text-orange-400 font-medium'
+                  ? 'bg-primary/10 text-primary font-bold'
                   : 'hover:bg-muted text-muted-foreground'
               }`}
             >
@@ -262,7 +262,7 @@ function FilterSidebar({
                     key={i}
                     className={`h-3.5 w-3.5 ${
                       i < rating
-                        ? 'fill-orange-400 text-orange-400'
+                        ? 'fill-primary text-primary'
                         : 'fill-muted text-muted'
                     }`}
                   />
@@ -286,8 +286,8 @@ function FilterSidebar({
               onClick={() => onToggleTag(tag)}
               className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors border ${
                 selectedTags.includes(tag)
-                  ? 'bg-orange-400 text-white border-orange-400'
-                  : 'bg-background text-muted-foreground border-border hover:border-blue-300 hover:text-orange-400'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-background text-muted-foreground border-border hover:border-primary hover:text-primary'
               }`}
             >
               {tag}
@@ -333,7 +333,7 @@ function ListProductCard({ product }: { product: Product }) {
 
   return (
     <div
-      className="group flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-border/50 hover:shadow-md transition-all duration-300 cursor-pointer bg-card"
+      className="group flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-border hover:border-primary hover:shadow-md transition-all duration-300 cursor-pointer bg-card"
       onClick={() => navigate('product', { id: product.id })}
     >
       {/* Image */}
@@ -346,18 +346,18 @@ function ListProductCard({ product }: { product: Product }) {
             onError={setImgError}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted-foreground bg-blue-50">
+          <div className="flex h-full w-full items-center justify-center text-muted-foreground bg-muted">
             <PackageSearch className="h-10 w-10" />
           </div>
         )}
         {discountPercent > 0 && (
-          <Badge className="absolute top-2 left-2 bg-red-500 text-white hover:bg-red-600 border-0 text-[11px] font-semibold px-1.5 py-0.5">
-            -{discountPercent}%
+          <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground hover:bg-primary border-0 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full">
+            -{discountPercent}% Off
           </Badge>
         )}
         {product.isNew && (
-          <Badge className="absolute top-2 right-2 bg-orange-400 text-white hover:bg-orange-400 border-0 text-[11px] font-semibold px-1.5 py-0.5">
-            NEW
+          <Badge className="absolute top-2 right-2 bg-foreground text-background hover:bg-foreground border-0 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full">
+            New
           </Badge>
         )}
       </div>
@@ -366,10 +366,10 @@ function ListProductCard({ product }: { product: Product }) {
       <div className="flex-1 min-w-0 flex flex-col">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-medium mb-1.5">
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-bold uppercase tracking-wider mb-1.5">
               {product.category}
             </Badge>
-            <h3 className="font-semibold text-sm sm:text-base leading-tight line-clamp-2">
+            <h3 className="font-black uppercase tracking-tight text-sm sm:text-base leading-tight line-clamp-2">
               {product.name}
             </h3>
           </div>
@@ -401,7 +401,7 @@ function ListProductCard({ product }: { product: Product }) {
                 key={star}
                 className={`h-3 w-3 ${
                   star <= Math.round(product.rating)
-                    ? 'fill-orange-400 text-orange-400'
+                    ? 'fill-primary text-primary'
                     : 'fill-muted text-muted'
                 }`}
               />
@@ -417,7 +417,7 @@ function ListProductCard({ product }: { product: Product }) {
           {product.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-orange-400 border border-blue-100"
+              className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-semibold uppercase tracking-wide"
             >
               {tag}
             </span>
@@ -427,13 +427,13 @@ function ListProductCard({ product }: { product: Product }) {
         {/* Price and Action */}
         <div className="flex items-center justify-between mt-auto pt-3">
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-bold text-orange-400">₹{displayPrice}</span>
+            <span className="text-lg font-black text-primary">₹{displayPrice}</span>
             {product.salePrice && (
               <span className="text-sm text-muted-foreground line-through">₹{product.price}</span>
             )}
           </div>
           <Button
-            className="bg-orange-400 hover:bg-orange-400 text-white text-xs sm:text-sm h-8 sm:h-9"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-black tracking-wide text-xs sm:text-sm h-8 sm:h-9 rounded-full"
             onClick={(e) => {
               e.stopPropagation()
               const firstVariant = product.variants[0]
@@ -712,13 +712,13 @@ export default function ShopPage() {
       })()}
 
       {/* Header Section */}
-      <div className="bg-gradient-to-b from-blue-50 to-background border-b">
+      <div className="bg-background border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
             <button
               onClick={() => navigate('home')}
-              className="hover:text-orange-400 transition-colors"
+              className="hover:text-primary transition-colors"
             >
               Home
             </button>
@@ -733,17 +733,20 @@ export default function ShopPage() {
           {/* Title and count */}
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-serif font-extrabold text-foreground">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                [ Premium Harvest Catalog ]
+              </span>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-foreground leading-none mt-1">
                 {selectedCategories[0] || pageParams.category
                   ? categories.find((c) => c.slug === (selectedCategories[0] || pageParams.category))?.name || 'Shop'
                   : 'Shop Premium Dry Fruits & Snacks'}
               </h1>
-              <p className="text-muted-foreground text-sm mt-1">
+              <p className="text-muted-foreground text-sm mt-2">
                 Showing {filteredProducts.length} of {products.length} products
                 {searchQuery && (
                   <span>
                     {' '}
-                    for &ldquo;<span className="text-orange-400 font-medium">{searchQuery}</span>&rdquo;
+                    for &ldquo;<span className="text-primary font-bold">{searchQuery}</span>&rdquo;
                   </span>
                 )}
               </p>
@@ -765,7 +768,7 @@ export default function ShopPage() {
                 <SlidersHorizontal className="h-4 w-4" />
                 Filters
                 {activeFilterCount > 0 && (
-                  <Badge className="bg-orange-400 text-white border-0 h-5 w-5 p-0 text-[10px] flex items-center justify-center rounded-full">
+                  <Badge className="bg-primary text-primary-foreground border-0 h-5 w-5 p-0 text-[10px] flex items-center justify-center rounded-full">
                     {activeFilterCount}
                   </Badge>
                 )}
@@ -774,7 +777,7 @@ export default function ShopPage() {
             <SheetContent side="left" className="w-80">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-orange-400" />
+                  <Filter className="h-4 w-4 text-primary" />
                   Filters
                 </SheetTitle>
               </SheetHeader>
@@ -813,7 +816,7 @@ export default function ShopPage() {
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="icon"
               className={`h-8 w-8 rounded-none ${
-                viewMode === 'grid' ? 'bg-orange-400 hover:bg-orange-400' : ''
+                viewMode === 'grid' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''
               }`}
               onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'grid' })}
               aria-label="Grid view"
@@ -824,7 +827,7 @@ export default function ShopPage() {
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size="icon"
               className={`h-8 w-8 rounded-none ${
-                viewMode === 'list' ? 'bg-orange-400 hover:bg-orange-400' : ''
+                viewMode === 'list' ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''
               }`}
               onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'list' })}
               aria-label="List view"
@@ -842,12 +845,12 @@ export default function ShopPage() {
               <Badge
                 key={tag.key}
                 variant="secondary"
-                className="gap-1 pr-1 text-xs font-medium bg-blue-50 text-orange-400 border-blue-200 hover:bg-blue-100"
+                className="gap-1 pr-1 text-xs font-bold uppercase tracking-wide bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
               >
                 {tag.label}
                 <button
                   onClick={tag.onRemove}
-                  className="ml-0.5 h-4 w-4 rounded-full inline-flex items-center justify-center hover:bg-blue-200 transition-colors"
+                  className="ml-0.5 h-4 w-4 rounded-full inline-flex items-center justify-center hover:bg-primary/20 transition-colors"
                   aria-label={`Remove ${tag.label} filter`}
                 >
                   <X className="h-3 w-3" />
@@ -856,7 +859,7 @@ export default function ShopPage() {
             ))}
             <button
               onClick={clearAllFilters}
-              className="text-xs text-red-600 hover:text-red-700 font-medium ml-2 underline underline-offset-2"
+              className="text-xs text-destructive hover:text-destructive/80 font-black uppercase tracking-wide ml-2 underline underline-offset-2"
             >
               Clear All
             </button>
@@ -869,10 +872,10 @@ export default function ShopPage() {
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-24">
               <div className="flex items-center gap-2 mb-4">
-                <Filter className="h-4 w-4 text-orange-400" />
-                <h2 className="font-semibold text-foreground">Filters</h2>
+                <Filter className="h-4 w-4 text-primary" />
+                <h2 className="font-black uppercase tracking-wide text-sm text-foreground">Filters</h2>
                 {activeFilterCount > 0 && (
-                  <Badge className="bg-orange-400 text-white border-0 h-5 min-w-5 px-1.5 text-[10px] flex items-center justify-center rounded-full">
+                  <Badge className="bg-primary text-primary-foreground border-0 h-5 min-w-5 px-1.5 text-[10px] flex items-center justify-center rounded-full">
                     {activeFilterCount}
                   </Badge>
                 )}
@@ -887,10 +890,10 @@ export default function ShopPage() {
           <main className="flex-1 min-w-0">
             {paginatedProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 sm:py-24 text-center">
-                <div className="h-20 w-20 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                  <PackageSearch className="h-10 w-10 text-orange-400" />
+                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <PackageSearch className="h-10 w-10 text-primary" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">
+                <h3 className="text-lg font-black uppercase tracking-wide text-foreground mb-2">
                   No products found
                 </h3>
                 <p className="text-muted-foreground text-sm max-w-md mb-6">
@@ -899,7 +902,7 @@ export default function ShopPage() {
                 </p>
                 <Button
                   onClick={clearAllFilters}
-                  className="bg-orange-400 hover:bg-orange-400 text-white"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 uppercase font-black tracking-wide rounded-full"
                 >
                   Clear All Filters
                 </Button>
@@ -948,9 +951,9 @@ export default function ShopPage() {
                       <li key={item}>
                         <button
                           onClick={() => dispatch({ type: 'SET_PAGE', payload: item })}
-                          className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                          className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-black transition-colors ${
                             safePage === item
-                              ? 'bg-orange-400 text-white hover:bg-orange-400'
+                              ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                               : 'hover:bg-accent hover:text-accent-foreground'
                           }`}
                           aria-current={safePage === item ? 'page' : undefined}
