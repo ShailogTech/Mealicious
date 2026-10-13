@@ -80,6 +80,7 @@ export async function pollMailboxes(): Promise<{ mailbox: string; fetched: numbe
       host: process.env.IMAP_HOST || 'mail.mealicious.store',
       port: Number(process.env.IMAP_PORT || 993),
       secure: true,
+      tls: { rejectUnauthorized: false }, // tolerate mail server cert until certbot provisions a proper one
       auth: { user: mb.email, pass: mb.password },
       logger: false,
     })
